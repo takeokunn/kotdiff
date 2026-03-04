@@ -121,7 +121,8 @@ export function calcEstimatedWorkTime(data: InProgressRowData, now: number): Est
 
   // Subtract completed breaks
   let completedBreaks = 0;
-  for (let i = 0; i < data.restEnds.length; i++) {
+  const breakPairs = Math.min(data.restStarts.length, data.restEnds.length);
+  for (let i = 0; i < breakPairs; i++) {
     completedBreaks += data.restEnds[i] - data.restStarts[i];
   }
 

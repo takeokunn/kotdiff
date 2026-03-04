@@ -19,7 +19,7 @@ import {
   isWorkingDay,
   nowAsDecimalHours,
 } from "./lib";
-import { DEFAULT_SIMPLE_MODE, SIMPLE_MODE_KEY } from "./storage";
+import { DEFAULT_ENABLED, DEFAULT_SIMPLE_MODE, SIMPLE_MODE_KEY, STORAGE_KEY } from "./storage";
 
 function injectStyles(): void {
   const style = document.createElement("style");
@@ -201,7 +201,10 @@ function addBreakColumn(table: HTMLTableElement): void {
     td.classList.add(KOTDIFF_MARKER_CLASS);
     if (pairs.length > 0) {
       const p = document.createElement("p");
-      p.innerHTML = pairs.join("<br>");
+      for (let i = 0; i < pairs.length; i++) {
+        if (i > 0) p.appendChild(document.createElement("br"));
+        p.appendChild(document.createTextNode(pairs[i]));
+      }
       td.appendChild(p);
     }
     endTd.after(td);
@@ -299,33 +302,35 @@ function main(simpleMode: boolean): void {
         const breakCell = getCell(row, "REST_MINUTE");
         if (breakCell) breakCell.style.backgroundColor = WARNING_COLOR;
       }
-    } else if (working && detectInProgressRow(row) !== null) {
-      // In-progress day: clocked in but not out yet
-      ipRow = row;
-      ipDiffCell = td;
-      ipCumulativeDiffBase = cumulativeDiff;
-      const inProgressData = detectInProgressRow(row)!;
-      const now = nowAsDecimalHours();
-      const estimated = calcEstimatedWorkTime(inProgressData, now);
+    } else if (working) {
+      const inProgressData = detectInProgressRow(row);
+      if (inProgressData) {
+        // In-progress day: clocked in but not out yet
+        ipRow = row;
+        ipDiffCell = td;
+        ipCumulativeDiffBase = cumulativeDiff;
+        const now = nowAsDecimalHours();
+        const estimated = calcEstimatedWorkTime(inProgressData, now);
 
-      cumulativeDiff += estimated.workTime - DEFAULT_EXPECTED_HOURS;
-      if (fixedWork !== null) {
-        overtimeDiff += estimated.workTime - fixedWork;
+        cumulativeDiff += estimated.workTime - DEFAULT_EXPECTED_HOURS;
+        if (fixedWork !== null) {
+          overtimeDiff += estimated.workTime - fixedWork;
+        }
+
+        // Show estimated time in ALL_WORK_MINUTE cell
+        const workCell = getCell(row, "ALL_WORK_MINUTE");
+        if (workCell) {
+          renderEstimatedWorkCell(workCell, estimated.workTime, estimated.isOnBreak);
+        }
+
+        // Show cumulative diff (italic)
+        td.textContent = formatDiff(cumulativeDiff);
+        td.style.color = cumulativeDiff >= 0 ? "green" : "red";
+        td.style.fontStyle = "italic";
+      } else if (actual === null) {
+        // Future working day
+        remainingDays++;
       }
-
-      // Show estimated time in ALL_WORK_MINUTE cell
-      const workCell = getCell(row, "ALL_WORK_MINUTE");
-      if (workCell) {
-        renderEstimatedWorkCell(workCell, estimated.workTime, estimated.isOnBreak);
-      }
-
-      // Show cumulative diff (italic)
-      td.textContent = formatDiff(cumulativeDiff);
-      td.style.color = cumulativeDiff >= 0 ? "green" : "red";
-      td.style.fontStyle = "italic";
-    } else if (actual === null && working) {
-      // Future working day
-      remainingDays++;
     }
 
     row.appendChild(td);
@@ -472,10 +477,10 @@ function isAlreadyInjected(): boolean {
 
 async function waitForTable(): Promise<void> {
   const result = await chrome.storage.local.get({
-    kotdiff_enabled: true,
+    [STORAGE_KEY]: DEFAULT_ENABLED,
     [SIMPLE_MODE_KEY]: DEFAULT_SIMPLE_MODE,
   });
-  if (!result.kotdiff_enabled) {
+  if (!result[STORAGE_KEY]) {
     console.log("[kotdiff] disabled, skipping");
     return;
   }
