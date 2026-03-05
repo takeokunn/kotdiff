@@ -2,6 +2,8 @@ import { describe, expect, test } from "vitest";
 import {
   type BannerLine,
   type InProgressRowData,
+  type RowInput,
+  accumulateRows,
   buildBannerLines,
   calcEstimatedWorkTime,
   detectInProgressRow,
@@ -586,6 +588,29 @@ describe("detectInProgressRow", () => {
     expect(result!.restEnds).toHaveLength(1);
     expect(result!.isOnBreak).toBe(true);
   });
+
+  test("レコードサイン付き出勤（A 11:51）", () => {
+    const row = makeRow({
+      start: "A\n11:51\n",
+      end: "",
+      allWork: "",
+      restStarts: "",
+      restEnds: "",
+    });
+    const result = detectInProgressRow(row);
+    expect(result).not.toBeNull();
+    expect(result!.startTime).toBeCloseTo(11 + 51 / 60);
+    expect(result!.isOnBreak).toBe(false);
+  });
+
+  test("レコードサイン付き退勤済み → null", () => {
+    const row = makeRow({
+      start: "A\n09:00\n",
+      end: "A\n18:00\n",
+      allWork: "8.00",
+    });
+    expect(detectInProgressRow(row)).toBeNull();
+  });
 });
 
 describe("calcEstimatedWorkTime", () => {
@@ -692,5 +717,59 @@ describe("nowAsDecimalHours", () => {
   test("UTC 16:30 → JST 翌1:30 → 25.5", () => {
     const date = new Date("2026-03-05T16:30:00Z");
     expect(nowAsDecimalHours(date)).toBe(25.5);
+  });
+});
+
+describe("accumulateRows", () => {
+  test("確定済みの勤務日のみ", () => {
+    const rows: RowInput[] = [
+      { actual: 9, fixedWork: 8, working: true, inProgress: null },
+      { actual: 7.5, fixedWork: 8, working: true, inProgress: null },
+    ];
+    const result = accumulateRows(rows);
+    // 9-8 + 7.5-8 = +0.5
+    expect(result.cumulativeDiff).toBeCloseTo(0.5);
+    expect(result.overtimeDiff).toBeCloseTo(0.5);
+    expect(result.remainingDays).toBe(0);
+  });
+
+  test("業務中の行は cumulativeDiff に含めない", () => {
+    const rows: RowInput[] = [
+      { actual: 9, fixedWork: 8, working: true, inProgress: null },
+      {
+        actual: null,
+        fixedWork: 8,
+        working: true,
+        inProgress: { estimatedWorkTime: 3, isOnBreak: false },
+      },
+    ];
+    const result = accumulateRows(rows);
+    // cumulativeDiff はバナー用: 確定分のみ = 9-8 = +1
+    expect(result.cumulativeDiff).toBeCloseTo(1);
+    expect(result.remainingDays).toBe(1);
+    // 業務中の見込み差分は別途返す
+    expect(result.inProgressEstimatedDiff).toBeCloseTo(3 - 8);
+  });
+
+  test("休日は集計しない", () => {
+    const rows: RowInput[] = [{ actual: null, fixedWork: null, working: false, inProgress: null }];
+    const result = accumulateRows(rows);
+    expect(result.cumulativeDiff).toBe(0);
+    expect(result.remainingDays).toBe(0);
+  });
+
+  test("未来の勤務日は remainingDays にカウント", () => {
+    const rows: RowInput[] = [
+      { actual: null, fixedWork: null, working: true, inProgress: null },
+      { actual: null, fixedWork: null, working: true, inProgress: null },
+    ];
+    const result = accumulateRows(rows);
+    expect(result.remainingDays).toBe(2);
+  });
+
+  test("業務中の行がない場合 inProgressEstimatedDiff は null", () => {
+    const rows: RowInput[] = [{ actual: 8, fixedWork: 8, working: true, inProgress: null }];
+    const result = accumulateRows(rows);
+    expect(result.inProgressEstimatedDiff).toBeNull();
   });
 });

@@ -213,12 +213,13 @@ export interface InProgressRowData {
 
 export function detectInProgressRow(row: Element): InProgressRowData | null {
   const startText = getCellText(row, "START_TIMERECORD");
-  const startTime = parseTimeRecord(startText);
-  if (startTime === null) return null;
+  const startTimes = parseAllTimeRecords(startText);
+  if (startTimes.length === 0) return null;
+  const startTime = startTimes[0];
 
   // Already clocked out or work time already calculated
   const endText = getCellText(row, "END_TIMERECORD");
-  if (parseTimeRecord(endText) !== null) return null;
+  if (parseAllTimeRecords(endText).length > 0) return null;
   const allWork = getCellText(row, "ALL_WORK_MINUTE");
   if (parseWorkTime(allWork) !== null) return null;
 
@@ -227,6 +228,45 @@ export function detectInProgressRow(row: Element): InProgressRowData | null {
   const isOnBreak = restStarts.length > restEnds.length;
 
   return { startTime, restStarts, restEnds, isOnBreak };
+}
+
+export interface RowInput {
+  actual: number | null;
+  fixedWork: number | null;
+  working: boolean;
+  inProgress: { estimatedWorkTime: number; isOnBreak: boolean } | null;
+}
+
+export interface AccumulateResult {
+  cumulativeDiff: number;
+  overtimeDiff: number;
+  remainingDays: number;
+  inProgressEstimatedDiff: number | null;
+}
+
+export function accumulateRows(rows: RowInput[]): AccumulateResult {
+  let cumulativeDiff = 0;
+  let overtimeDiff = 0;
+  let remainingDays = 0;
+  let inProgressEstimatedDiff: number | null = null;
+
+  for (const row of rows) {
+    if (!row.working) continue;
+
+    if (row.actual !== null) {
+      cumulativeDiff += row.actual - DEFAULT_EXPECTED_HOURS;
+      if (row.fixedWork !== null) {
+        overtimeDiff += row.actual - row.fixedWork;
+      }
+    } else if (row.inProgress) {
+      inProgressEstimatedDiff = row.inProgress.estimatedWorkTime - DEFAULT_EXPECTED_HOURS;
+      remainingDays++;
+    } else {
+      remainingDays++;
+    }
+  }
+
+  return { cumulativeDiff, overtimeDiff, remainingDays, inProgressEstimatedDiff };
 }
 
 export function isWorkingDay(row: Element): boolean {
