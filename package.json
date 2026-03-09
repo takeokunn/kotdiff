@@ -1,6 +1,6 @@
 {
   "name": "kotdiff",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "scripts": {
     "build": "esbuild src/content.ts --bundle --outfile=dist/content.js --format=iife && esbuild src/background.ts --bundle --outfile=dist/background.js --format=iife && cp manifest.json dist/ && cp -r icons dist/",
