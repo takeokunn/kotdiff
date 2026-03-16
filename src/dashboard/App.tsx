@@ -1,8 +1,47 @@
+import { useEffect, useState } from "react";
+import { buildDashboardSummary, type DashboardSummary } from "../dashboard-data";
+import type { DashboardData } from "../types";
+import { SummaryCards } from "./components/SummaryCards";
+import { DailyTable } from "./components/DailyTable";
+
 export function App() {
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [generatedAt, setGeneratedAt] = useState<string>("");
+
+  useEffect(() => {
+    chrome.storage.local.get("kotdiff_dashboard_data", (result) => {
+      const data: DashboardData | undefined = result.kotdiff_dashboard_data;
+      if (data) {
+        setSummary(buildDashboardSummary(data));
+        setGeneratedAt(data.generatedAt);
+      }
+    });
+  }, []);
+
+  if (!summary) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500">
+          データがありません。KING OF TIME のページからダッシュボードを開いてください。
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">KotDiff Dashboard</h1>
-      <p className="text-gray-500">Loading...</p>
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-800">KotDiff Dashboard</h1>
+          {generatedAt && (
+            <span className="text-sm text-gray-400">
+              {new Date(generatedAt).toLocaleString("ja-JP")}
+            </span>
+          )}
+        </div>
+        <SummaryCards summary={summary} />
+        <DailyTable rows={summary.dailyRows} />
+      </div>
     </div>
   );
 }
