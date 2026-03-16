@@ -270,6 +270,21 @@ export function accumulateRows(rows: RowInput[]): AccumulateResult {
   return { cumulativeDiff, overtimeDiff, remainingDays, inProgressEstimatedDiff };
 }
 
+export function parseLeaveBalanceText(text: string): {
+  used: number;
+  remaining: number | null;
+} {
+  const normalized = text.replace(/\s+/g, " ").trim();
+
+  const remainingMatch = normalized.match(/残\s*([\d.]+)/);
+  const remaining = remainingMatch ? parseFloat(remainingMatch[1]) : null;
+
+  const usedMatch = normalized.match(/^([\d.]+)/);
+  const used = usedMatch ? parseFloat(usedMatch[1]) : 0;
+
+  return { used, remaining };
+}
+
 export function isWorkingDay(row: Element): boolean {
   const schedule = row.querySelector<HTMLTableCellElement>('td[data-ht-sort-index="SCHEDULE"]');
   if (!schedule) return false;
