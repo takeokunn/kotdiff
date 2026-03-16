@@ -43,7 +43,14 @@ export function DailyTable({ rows }: DailyTableProps) {
                 className={row.isWeekend ? "bg-blue-50/40 text-gray-400" : ""}
               >
                 <TableCell className="font-medium">
-                  <div>{row.date}</div>
+                  <div className="flex items-center gap-1.5">
+                    <span>{row.date}</span>
+                    {row.schedule && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        {row.schedule}
+                      </Badge>
+                    )}
+                  </div>
                   {attendance && <div className="text-xs text-gray-400">{attendance}</div>}
                 </TableCell>
                 <TableCell>
