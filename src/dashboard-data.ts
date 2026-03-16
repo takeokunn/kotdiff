@@ -10,6 +10,8 @@ export interface DashboardSummary {
   cumulativeDiff: number;
   totalOvertime: number;
   avgWorkTime: number;
+  projectedTotal: number;
+  progressPercent: number;
   dailyRows: DailyRowSummary[];
 }
 
@@ -23,6 +25,10 @@ export interface DailyRowSummary {
   cumulativeDiff: number | null;
   overtime: number | null;
   breakTime: number | null;
+  startTime: string | null;
+  endTime: string | null;
+  breakStarts: string[];
+  breakEnds: string[];
 }
 
 export function buildDashboardSummary(data: DashboardData): DashboardSummary {
@@ -70,11 +76,17 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
       cumulativeDiff: cumDiff,
       overtime: row.overtime,
       breakTime: row.breakTime,
+      startTime: row.startTime,
+      endTime: row.endTime,
+      breakStarts: row.breakStarts,
+      breakEnds: row.breakEnds,
     });
   }
 
   const remainingDays = totalWorkDays - workedDays;
   const avgWorkTime = workedDays > 0 ? totalActual / workedDays : 0;
+  const projectedTotal = workedDays > 0 ? totalActual + remainingDays * avgWorkTime : 0;
+  const progressPercent = totalExpected > 0 ? (totalActual / totalExpected) * 100 : 0;
 
   return {
     totalWorkDays,
@@ -85,6 +97,8 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
     cumulativeDiff,
     totalOvertime,
     avgWorkTime,
+    projectedTotal,
+    progressPercent,
     dailyRows,
   };
 }

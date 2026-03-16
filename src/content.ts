@@ -10,6 +10,7 @@ import {
   buildBannerLines,
   calcEstimatedWorkTime,
   detectInProgressRow,
+  extractTimeStrings,
   formatDiff,
   formatHM,
   getCell,
@@ -369,7 +370,33 @@ function buildDashboardDataFromTable(table: HTMLTableElement): DashboardData {
     const overtime = getCellValue(row, "OVERTIME_WORK_MINUTE");
     const breakTime = getCellValue(row, "REST_MINUTE");
 
-    rows.push({ date, dayType, isWeekend, actual, fixedWork, overtime, breakTime });
+    const startCell = getCell(row, "START_TIMERECORD");
+    const startTimes = extractTimeStrings(startCell?.textContent ?? "");
+    const startTime = startTimes[0] ?? null;
+
+    const endCell = getCell(row, "END_TIMERECORD");
+    const endTimes = extractTimeStrings(endCell?.textContent ?? "");
+    const endTime = endTimes[0] ?? null;
+
+    const restStartCell = getCell(row, "REST_START_TIMERECORD");
+    const breakStarts = extractTimeStrings(restStartCell?.textContent ?? "");
+
+    const restEndCell = getCell(row, "REST_END_TIMERECORD");
+    const breakEnds = extractTimeStrings(restEndCell?.textContent ?? "");
+
+    rows.push({
+      date,
+      dayType,
+      isWeekend,
+      actual,
+      fixedWork,
+      overtime,
+      breakTime,
+      startTime,
+      endTime,
+      breakStarts,
+      breakEnds,
+    });
   }
 
   return { rows, generatedAt: new Date().toISOString() };

@@ -6,6 +6,10 @@ export interface DashboardRow {
   fixedWork: number | null;
   overtime: number | null;
   breakTime: number | null;
+  startTime: string | null;
+  endTime: string | null;
+  breakStarts: string[];
+  breakEnds: string[];
 }
 
 export interface DashboardData {
