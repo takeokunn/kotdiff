@@ -1,10 +1,9 @@
-import { Clock, CalendarDays, TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
+import { Clock, CalendarDays, TrendingUp, AlertTriangle } from "lucide-react";
 import type { DashboardSummary } from "../../dashboard-data";
 import { DEFAULT_EXPECTED_HOURS, formatDiff, formatHM, OVERTIME_LIMIT } from "../../lib";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { SemicircleProgress } from "./SemicircleProgress";
-import { Sparkline } from "./Sparkline";
 
 interface SummaryCardsProps {
   summary: DashboardSummary;
@@ -12,23 +11,6 @@ interface SummaryCardsProps {
 
 export function SummaryCards({ summary }: SummaryCardsProps) {
   const remainingRequired = summary.remainingDays * DEFAULT_EXPECTED_HOURS - summary.cumulativeDiff;
-
-  // Recent trend: average diff of last 5 working days
-  const recentDiffs = summary.dailyRows.filter((r) => r.diff !== null).slice(-5);
-  const recentAvg =
-    recentDiffs.length > 0
-      ? recentDiffs.reduce((sum, r) => sum + r.diff!, 0) / recentDiffs.length
-      : 0;
-
-  // Sparkline data: all cumulative diff values
-  const sparklineData = summary.dailyRows
-    .filter((r) => r.cumulativeDiff !== null)
-    .map((r) => r.cumulativeDiff!);
-
-  const TrendIcon = recentAvg > 0.05 ? TrendingUp : recentAvg < -0.05 ? TrendingDown : Minus;
-  const trendColor =
-    recentAvg > 0.05 ? "text-green-600" : recentAvg < -0.05 ? "text-red-600" : "text-gray-500";
-  const trendLabel = recentAvg > 0.05 ? "増加傾向" : recentAvg < -0.05 ? "減少傾向" : "横ばい";
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -45,20 +27,11 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
               >
                 {formatDiff(summary.cumulativeDiff)}
               </div>
-              <div className={`flex items-center gap-1 text-xs ${trendColor}`}>
-                <TrendIcon className="h-3 w-3" />
-                <span>
-                  {trendLabel} ({formatDiff(recentAvg)}/日)
-                </span>
-              </div>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-500">
                 {summary.workedDays}日勤務済み / {summary.totalWorkDays}日
               </p>
             </div>
-            <div className="flex flex-col items-end gap-1">
-              <SemicircleProgress percent={summary.progressPercent} />
-              {sparklineData.length >= 2 && <Sparkline data={sparklineData} />}
-            </div>
+            <SemicircleProgress percent={summary.progressPercent} />
           </div>
         </CardContent>
       </Card>
