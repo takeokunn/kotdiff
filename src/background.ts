@@ -48,6 +48,16 @@ chrome.runtime.onMessage.addListener((message) => {
     const url = chrome.runtime.getURL("dashboard.html");
     chrome.tabs.create({ url });
   }
+  if (message.type === "kotdiff-refresh-dashboard") {
+    // KOT のタブを探してデータ再収集を依頼
+    chrome.tabs.query({ url: "*://s2.kingtime.jp/*" }, (tabs) => {
+      for (const tab of tabs) {
+        if (tab.id !== undefined) {
+          chrome.tabs.sendMessage(tab.id, { type: "kotdiff-rescrape" }).catch(() => {});
+        }
+      }
+    });
+  }
 });
 
 chrome.runtime.onInstalled.addListener(async () => {

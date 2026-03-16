@@ -56,9 +56,9 @@ export function App() {
               </span>
             )}
             <button
-              onClick={loadDashboardData}
+              onClick={() => chrome.runtime.sendMessage({ type: "kotdiff-refresh-dashboard" })}
               className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-              title="データを再読み込み"
+              title="KOT ページからデータを再取得"
             >
               <RefreshCw className="h-4 w-4" />
             </button>
