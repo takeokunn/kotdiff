@@ -20,7 +20,8 @@ import {
   nowAsDecimalHours,
 } from "./lib";
 import { DASHBOARD_KEY, DEFAULT_DASHBOARD, DEFAULT_ENABLED, STORAGE_KEY } from "./storage";
-import type { DashboardData, DashboardRow } from "./types";
+import type { DashboardData, DashboardRow, LeaveBalance } from "./types";
+import { parseLeaveBalanceText } from "./lib";
 
 function injectStyles(): void {
   const style = document.createElement("style");
@@ -347,9 +348,22 @@ function injectDashboardButton(): void {
   banner.appendChild(btn);
 }
 
+function scrapeLeaveBalances(): LeaveBalance[] {
+  const balances: LeaveBalance[] = [];
+  const entries = document.querySelectorAll(".specific-daysCount_1 li");
+  for (const li of entries) {
+    const label = li.querySelector("label")?.textContent?.trim() ?? "";
+    const div = li.querySelector("div");
+    if (!label || !div) continue;
+    const { used, remaining } = parseLeaveBalanceText(div.textContent ?? "");
+    balances.push({ label, used, remaining });
+  }
+  return balances;
+}
+
 function buildDashboardDataFromTable(table: HTMLTableElement): DashboardData {
   const tbody = table.querySelector("tbody");
-  if (!tbody) return { rows: [], generatedAt: new Date().toISOString() };
+  if (!tbody) return { rows: [], leaveBalances: [], generatedAt: new Date().toISOString() };
 
   const rows: DashboardRow[] = [];
   for (const row of tbody.querySelectorAll("tr")) {
@@ -384,6 +398,9 @@ function buildDashboardDataFromTable(table: HTMLTableElement): DashboardData {
     const restEndCell = getCell(row, "REST_END_TIMERECORD");
     const breakEnds = extractTimeStrings(restEndCell?.textContent ?? "");
 
+    const scheduleCell = getCell(row, "SCHEDULE");
+    const schedule = scheduleCell?.textContent?.trim() || null;
+
     rows.push({
       date,
       dayType,
@@ -396,10 +413,12 @@ function buildDashboardDataFromTable(table: HTMLTableElement): DashboardData {
       endTime,
       breakStarts,
       breakEnds,
+      schedule,
     });
   }
 
-  return { rows, generatedAt: new Date().toISOString() };
+  const leaveBalances = scrapeLeaveBalances();
+  return { rows, leaveBalances, generatedAt: new Date().toISOString() };
 }
 
 chrome.runtime.onMessage.addListener((message) => {

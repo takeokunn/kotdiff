@@ -1,4 +1,4 @@
-import type { DashboardData } from "./types";
+import type { DashboardData, LeaveBalance } from "./types";
 import { DEFAULT_EXPECTED_HOURS } from "./lib";
 
 export interface DashboardSummary {
@@ -12,6 +12,7 @@ export interface DashboardSummary {
   avgWorkTime: number;
   projectedTotal: number;
   progressPercent: number;
+  leaveBalances: LeaveBalance[];
   dailyRows: DailyRowSummary[];
 }
 
@@ -29,6 +30,7 @@ export interface DailyRowSummary {
   endTime: string | null;
   breakStarts: string[];
   breakEnds: string[];
+  schedule: string | null;
 }
 
 export function buildDashboardSummary(data: DashboardData): DashboardSummary {
@@ -80,6 +82,7 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
       endTime: row.endTime,
       breakStarts: row.breakStarts,
       breakEnds: row.breakEnds,
+      schedule: row.schedule,
     });
   }
 
@@ -99,6 +102,7 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
     avgWorkTime,
     projectedTotal,
     progressPercent,
+    leaveBalances: data.leaveBalances,
     dailyRows,
   };
 }

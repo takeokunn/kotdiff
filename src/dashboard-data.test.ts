@@ -15,14 +15,21 @@ function makeRow(overrides: Partial<DashboardRow> = {}): DashboardRow {
     endTime: null,
     breakStarts: [],
     breakEnds: [],
+    schedule: null,
     ...overrides,
   };
 }
 
+function makeData(
+  rows: DashboardRow[],
+  leaveBalances: DashboardData["leaveBalances"] = [],
+): DashboardData {
+  return { rows, leaveBalances, generatedAt: "2026-03-16T00:00:00Z" };
+}
+
 describe("buildDashboardSummary", () => {
   test("空データ", () => {
-    const data: DashboardData = { rows: [], generatedAt: "2026-03-16T00:00:00Z" };
-    const summary = buildDashboardSummary(data);
+    const summary = buildDashboardSummary(makeData([]));
     expect(summary.totalWorkDays).toBe(0);
     expect(summary.workedDays).toBe(0);
     expect(summary.remainingDays).toBe(0);
@@ -32,14 +39,12 @@ describe("buildDashboardSummary", () => {
   });
 
   test("確定済みの勤務日", () => {
-    const data: DashboardData = {
-      rows: [
+    const summary = buildDashboardSummary(
+      makeData([
         makeRow({ date: "03/01（月）", actual: 9, fixedWork: 8, overtime: 1, breakTime: 1 }),
         makeRow({ date: "03/02（火）", actual: 7.5, fixedWork: 8, overtime: 0, breakTime: 1 }),
-      ],
-      generatedAt: "2026-03-16T00:00:00Z",
-    };
-    const summary = buildDashboardSummary(data);
+      ]),
+    );
     expect(summary.totalWorkDays).toBe(2);
     expect(summary.workedDays).toBe(2);
     expect(summary.remainingDays).toBe(0);
@@ -55,28 +60,24 @@ describe("buildDashboardSummary", () => {
   });
 
   test("週末は勤務日に含めない", () => {
-    const data: DashboardData = {
-      rows: [
+    const summary = buildDashboardSummary(
+      makeData([
         makeRow({ date: "03/01（土）", isWeekend: true, dayType: "所定休日" }),
         makeRow({ date: "03/02（日）", isWeekend: true, dayType: "法定休日" }),
-      ],
-      generatedAt: "2026-03-16T00:00:00Z",
-    };
-    const summary = buildDashboardSummary(data);
+      ]),
+    );
     expect(summary.totalWorkDays).toBe(0);
     expect(summary.workedDays).toBe(0);
   });
 
   test("未来の勤務日は remainingDays にカウント", () => {
-    const data: DashboardData = {
-      rows: [
+    const summary = buildDashboardSummary(
+      makeData([
         makeRow({ date: "03/01（月）", actual: 8, fixedWork: 8 }),
         makeRow({ date: "03/02（火）" }),
         makeRow({ date: "03/03（水）" }),
-      ],
-      generatedAt: "2026-03-16T00:00:00Z",
-    };
-    const summary = buildDashboardSummary(data);
+      ]),
+    );
     expect(summary.totalWorkDays).toBe(3);
     expect(summary.workedDays).toBe(1);
     expect(summary.remainingDays).toBe(2);
@@ -90,18 +91,14 @@ describe("buildDashboardSummary", () => {
     for (let i = 0; i < 10; i++) {
       rows.push(makeRow({ date: `03/${i + 6}` }));
     }
-    const data: DashboardData = { rows, generatedAt: "2026-03-16T00:00:00Z" };
-    const summary = buildDashboardSummary(data);
-    // 5 * 8.5 = 42.5, avg = 8.5, remaining 10 days → 42.5 + 10 * 8.5 = 127.5
+    const summary = buildDashboardSummary(makeData(rows));
     expect(summary.projectedTotal).toBeCloseTo(127.5);
   });
 
   test("projectedTotal: 0日勤務は0", () => {
-    const data: DashboardData = {
-      rows: [makeRow({ date: "03/01" }), makeRow({ date: "03/02" })],
-      generatedAt: "2026-03-16T00:00:00Z",
-    };
-    const summary = buildDashboardSummary(data);
+    const summary = buildDashboardSummary(
+      makeData([makeRow({ date: "03/01" }), makeRow({ date: "03/02" })]),
+    );
     expect(summary.projectedTotal).toBe(0);
   });
 
@@ -110,21 +107,18 @@ describe("buildDashboardSummary", () => {
     for (let i = 0; i < 5; i++) {
       rows.push(makeRow({ date: `03/0${i + 1}`, actual: 8.4, fixedWork: 8 }));
     }
-    const data: DashboardData = { rows, generatedAt: "2026-03-16T00:00:00Z" };
-    const summary = buildDashboardSummary(data);
-    // totalActual = 42, totalExpected = 40 → 105%
+    const summary = buildDashboardSummary(makeData(rows));
     expect(summary.progressPercent).toBeCloseTo(105);
   });
 
   test("progressPercent: 0日は0%", () => {
-    const data: DashboardData = { rows: [], generatedAt: "2026-03-16T00:00:00Z" };
-    const summary = buildDashboardSummary(data);
+    const summary = buildDashboardSummary(makeData([]));
     expect(summary.progressPercent).toBe(0);
   });
 
   test("dailyRows に時刻フィールドがパススルーされる", () => {
-    const data: DashboardData = {
-      rows: [
+    const summary = buildDashboardSummary(
+      makeData([
         makeRow({
           date: "03/01",
           actual: 8,
@@ -134,10 +128,8 @@ describe("buildDashboardSummary", () => {
           breakStarts: ["12:00"],
           breakEnds: ["13:00"],
         }),
-      ],
-      generatedAt: "2026-03-16T00:00:00Z",
-    };
-    const summary = buildDashboardSummary(data);
+      ]),
+    );
     expect(summary.dailyRows[0].startTime).toBe("9:00");
     expect(summary.dailyRows[0].endTime).toBe("18:00");
     expect(summary.dailyRows[0].breakStarts).toEqual(["12:00"]);
@@ -145,18 +137,35 @@ describe("buildDashboardSummary", () => {
   });
 
   test("累積差分が正しく計算される", () => {
-    const data: DashboardData = {
-      rows: [
+    const summary = buildDashboardSummary(
+      makeData([
         makeRow({ date: "03/01", actual: 9, fixedWork: 8 }),
         makeRow({ date: "03/02", actual: 7, fixedWork: 8 }),
         makeRow({ date: "03/03", actual: 8.5, fixedWork: 8 }),
-      ],
-      generatedAt: "2026-03-16T00:00:00Z",
-    };
-    const summary = buildDashboardSummary(data);
-    // +1, -1, +0.5 → cumulative: 1, 0, 0.5
+      ]),
+    );
     expect(summary.dailyRows[0].cumulativeDiff).toBeCloseTo(1);
     expect(summary.dailyRows[1].cumulativeDiff).toBeCloseTo(0);
     expect(summary.dailyRows[2].cumulativeDiff).toBeCloseTo(0.5);
+  });
+
+  test("leaveBalances がパススルーされる", () => {
+    const leaves = [
+      { label: "有休", used: 2, remaining: 8 },
+      { label: "代休", used: 1, remaining: 0 },
+    ];
+    const summary = buildDashboardSummary(makeData([], leaves));
+    expect(summary.leaveBalances).toEqual(leaves);
+  });
+
+  test("schedule がパススルーされる", () => {
+    const summary = buildDashboardSummary(
+      makeData([
+        makeRow({ date: "03/01", actual: 8, fixedWork: 8, schedule: "複数回休憩" }),
+        makeRow({ date: "03/02", schedule: null }),
+      ]),
+    );
+    expect(summary.dailyRows[0].schedule).toBe("複数回休憩");
+    expect(summary.dailyRows[1].schedule).toBeNull();
   });
 });
