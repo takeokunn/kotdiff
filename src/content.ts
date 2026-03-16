@@ -405,7 +405,7 @@ function buildDashboardDataFromTable(table: HTMLTableElement): DashboardData {
 
     const working = isWorkingDay(row);
 
-    // KOT の深夜残業列は空のため、出退勤・休憩時刻から計算する
+    // KOT の深夜残業列は空のため、22:00〜5:00 の深夜時間帯を出退勤・休憩時刻から計算する
     let nightOvertime: number | null = null;
     if (startTime && endTime) {
       const startNums = parseAllTimeRecords(startCell?.textContent ?? "");
