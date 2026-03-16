@@ -914,7 +914,7 @@ describe("buildDashboardSummary", () => {
     expect(summary.remainingDays).toBe(0);
     expect(summary.totalActual).toBeCloseTo(16.5);
     expect(summary.cumulativeDiff).toBeCloseTo(0.5);
-    // totalOvertime is actual - fixedWork: (9-8) + (7.5-8) = 0.5
+    // totalOvertime = cumulativeDiff = (9-8) + (7.5-8) = 0.5
     expect(summary.totalOvertime).toBeCloseTo(0.5);
     expect(summary.avgWorkTime).toBeCloseTo(8.25);
 
@@ -1044,15 +1044,16 @@ describe("buildDashboardSummary", () => {
     expect(summary.dailyRows[1].schedule).toBeNull();
   });
 
-  test("totalOvertime は actual - fixedWork で計算される", () => {
+  test("totalOvertime は cumulativeDiff と同じ (actual - DEFAULT_EXPECTED_HOURS)", () => {
     const summary = buildDashboardSummary(
       makeData([
         makeDashboardRow({ date: "03/01", actual: 10, fixedWork: 8 }),
         makeDashboardRow({ date: "03/02", actual: 7, fixedWork: 8 }),
       ]),
     );
-    // (10-8) + (7-8) = 1
+    // (10-8) + (7-8) = 1 = cumulativeDiff
     expect(summary.totalOvertime).toBeCloseTo(1);
+    expect(summary.totalOvertime).toBe(summary.cumulativeDiff);
   });
 
   test("深夜残業が合計される (totalNightOvertime)", () => {
@@ -1088,5 +1089,21 @@ describe("buildDashboardSummary", () => {
     );
     expect(summary.totalOvertime).toBe(0);
     expect(summary.totalWorkDays).toBe(0);
+  });
+
+  test("深夜残業は working: false の行でも集計される", () => {
+    const summary = buildDashboardSummary(
+      makeData([
+        makeDashboardRow({
+          date: "03/01",
+          actual: 8,
+          fixedWork: 8,
+          working: true,
+          nightOvertime: 1,
+        }),
+        makeDashboardRow({ date: "03/02", working: false, nightOvertime: 0.5 }),
+      ]),
+    );
+    expect(summary.totalNightOvertime).toBeCloseTo(1.5);
   });
 });

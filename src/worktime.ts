@@ -379,10 +379,11 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
       perRowCumulativeDiff += row.actual - expected;
       diff = row.actual - expected;
       cumDiff = perRowCumulativeDiff;
+    }
 
-      if (row.nightOvertime !== null) {
-        totalNightOvertime += row.nightOvertime;
-      }
+    // 深夜残業は勤務日かどうかに関係なく集計（22:00〜4:59）
+    if (row.nightOvertime !== null) {
+      totalNightOvertime += row.nightOvertime;
     }
 
     dailyRows.push({
@@ -415,7 +416,7 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
     totalActual: acc.totalActual,
     totalExpected: acc.totalExpected,
     cumulativeDiff: acc.cumulativeDiff,
-    totalOvertime: acc.overtimeDiff,
+    totalOvertime: acc.cumulativeDiff,
     totalNightOvertime,
     avgWorkTime,
     projectedTotal,
