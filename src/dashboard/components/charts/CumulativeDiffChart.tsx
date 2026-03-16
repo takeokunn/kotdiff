@@ -75,33 +75,38 @@ export function CumulativeDiffChart({ rows }: CumulativeDiffChartProps) {
           {formatDiff(t)}
         </text>
       ))}
-      {/* Line */}
-      <polyline
-        points={polylinePoints}
-        fill="none"
-        stroke={lineColor}
-        strokeWidth={2}
-        className="chart-line"
-        style={{ "--line-length": 2000 } as React.CSSProperties}
-      />
-      {/* Area fill */}
-      <polygon
-        points={`${xScale(0)},${zeroY} ${polylinePoints} ${xScale(points.length - 1)},${zeroY}`}
-        fill={lineColor}
-        className="chart-area"
-        style={{ "--target-opacity": 0.1 } as React.CSSProperties}
-      />
-      {/* Dots */}
-      {points.map((p) => (
-        <circle
-          key={p.index}
-          cx={xScale(p.index)}
-          cy={yScale(p.value)}
-          fill={p.value >= 0 ? "#16a34a" : "#dc2626"}
-          className="chart-dot"
-          style={{ "--dot-delay": `${0.8 + p.index * 0.03}s` } as React.CSSProperties}
+      {/* Clip path for reveal animation */}
+      <defs>
+        <clipPath id="chart-reveal">
+          <rect
+            x={PAD.left}
+            y={0}
+            height={H}
+            className="chart-reveal-clip"
+            style={{ "--reveal-width": `${W - PAD.left}px` } as React.CSSProperties}
+          />
+        </clipPath>
+      </defs>
+      <g clipPath="url(#chart-reveal)">
+        {/* Line */}
+        <polyline points={polylinePoints} fill="none" stroke={lineColor} strokeWidth={2} />
+        {/* Area fill */}
+        <polygon
+          points={`${xScale(0)},${zeroY} ${polylinePoints} ${xScale(points.length - 1)},${zeroY}`}
+          fill={lineColor}
+          opacity={0.1}
         />
-      ))}
+        {/* Dots */}
+        {points.map((p) => (
+          <circle
+            key={p.index}
+            cx={xScale(p.index)}
+            cy={yScale(p.value)}
+            r={3}
+            fill={p.value >= 0 ? "#16a34a" : "#dc2626"}
+          />
+        ))}
+      </g>
       {/* X-axis labels (every few) */}
       {points
         .filter(
