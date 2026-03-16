@@ -19,6 +19,7 @@ import {
   nowAsDecimalHours,
 } from "./lib";
 import { DASHBOARD_KEY, DEFAULT_DASHBOARD, DEFAULT_ENABLED, STORAGE_KEY } from "./storage";
+import type { DashboardData, DashboardRow } from "./types";
 
 function injectStyles(): void {
   const style = document.createElement("style");
@@ -343,21 +344,6 @@ function injectDashboardButton(): void {
   });
 
   banner.appendChild(btn);
-}
-
-interface DashboardRow {
-  date: string;
-  dayType: string;
-  isWeekend: boolean;
-  actual: number | null;
-  fixedWork: number | null;
-  overtime: number | null;
-  breakTime: number | null;
-}
-
-interface DashboardData {
-  rows: DashboardRow[];
-  generatedAt: string;
 }
 
 function buildDashboardDataFromTable(table: HTMLTableElement): DashboardData {
