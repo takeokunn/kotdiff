@@ -11,8 +11,6 @@ import {
   calcEstimatedWorkTime,
   detectInProgressRow,
   extractTimeStrings,
-  formatAttendance,
-  formatBreakPairs,
   formatDiff,
   formatHM,
   getCell,
@@ -21,7 +19,9 @@ import {
   isWorkingDay,
   nowAsDecimalHours,
 } from "./lib";
-import { DEFAULT_ENABLED, DEFAULT_SIMPLE_MODE, SIMPLE_MODE_KEY, STORAGE_KEY } from "./storage";
+import { DASHBOARD_KEY, DEFAULT_DASHBOARD, DEFAULT_ENABLED, STORAGE_KEY } from "./storage";
+import type { DashboardData, DashboardRow, LeaveBalance } from "./types";
+import { parseLeaveBalanceText } from "./lib";
 
 function injectStyles(): void {
   const style = document.createElement("style");
@@ -80,150 +80,6 @@ function injectStyles(): void {
   document.head.appendChild(style);
 }
 
-const HIDDEN_SORT_INDICES = [
-  "SCHEDULE",
-  "START_TIMERECORD",
-  "END_TIMERECORD",
-  "REST_START_TIMERECORD",
-  "REST_END_TIMERECORD",
-  "FIXED_WORK_MINUTE",
-  "EXTRA_WORK_MINUTE",
-  "OVERTIME_WORK_MINUTE",
-  "NIGHT_WORK_MINUTE",
-  "NIGHT_EXTRA_WORK_MINUTE",
-  "NIGHT_OVERTIME_WORK_MINUTE",
-  "HOLIDAY_NIGHT_WORK_MINUTE",
-  "HOLIDAY_NIGHT_EXTRA_WORK_MINUTE",
-  "HOLIDAY_NIGHT_OVERTIME_WORK_MINUTE",
-  "HOLIDAY_FIXED_WORK_MINUTE",
-  "HOLIDAY_EXTRA_WORK_MINUTE",
-  "HOLIDAY_OVERTIME_WORK_MINUTE",
-  "LATE_MINUTE",
-  "EARLY_LEAVE_MINUTE",
-  "REMARK",
-];
-
-function injectSimpleModeStyles(): void {
-  const style = document.createElement("style");
-  style.classList.add(KOTDIFF_MARKER_CLASS);
-
-  const selectors: string[] = [];
-  for (const idx of HIDDEN_SORT_INDICES) {
-    selectors.push(`th[data-ht-sort-index="${idx}"]`);
-    selectors.push(`td[data-ht-sort-index="${idx}"]`);
-  }
-  // 締・認 columns use class-based selectors
-  selectors.push("th.specific_close_status");
-  selectors.push("td.close_status");
-
-  style.textContent = `${selectors.join(",\n")} { display: none !important; }`;
-  document.head.appendChild(style);
-}
-
-function addAttendanceColumn(table: HTMLTableElement): void {
-  const thead = table.querySelector("thead");
-  const tbody = table.querySelector("tbody");
-  if (!thead || !tbody) return;
-
-  // Add header before START_TIMERECORD
-  const headerRow = thead.querySelector("tr");
-  if (headerRow) {
-    const startTh = headerRow.querySelector('th[data-ht-sort-index="START_TIMERECORD"]');
-    if (startTh) {
-      const th = document.createElement("th");
-      th.classList.add(KOTDIFF_MARKER_CLASS, "kotdiff-center");
-      const p = document.createElement("p");
-      p.textContent = "勤怠";
-      th.appendChild(p);
-      startTh.before(th);
-    }
-  }
-
-  // Add body cells
-  const rows = tbody.querySelectorAll("tr");
-  for (const row of rows) {
-    const startTd = row.querySelector<HTMLTableCellElement>(
-      'td[data-ht-sort-index="START_TIMERECORD"]',
-    );
-    if (!startTd) continue;
-
-    const startTexts = extractTimeStrings(startTd.textContent ?? "");
-    const endTd = row.querySelector<HTMLTableCellElement>(
-      'td[data-ht-sort-index="END_TIMERECORD"]',
-    );
-    const endTexts = extractTimeStrings(endTd?.textContent ?? "");
-
-    const td = document.createElement("td");
-    td.classList.add(KOTDIFF_MARKER_CLASS, "kotdiff-center");
-    const start = startTexts[0] ?? "";
-    const end = endTexts[0] ?? "";
-    if (start || end) {
-      const p = document.createElement("p");
-      p.appendChild(document.createTextNode(formatAttendance(start, end)));
-      if (start && !end) {
-        const placeholder = document.createElement("span");
-        placeholder.style.visibility = "hidden";
-        placeholder.textContent = "00:00";
-        p.appendChild(placeholder);
-      }
-      td.appendChild(p);
-    }
-    startTd.before(td);
-  }
-}
-
-function addBreakColumn(table: HTMLTableElement): void {
-  const thead = table.querySelector("thead");
-  const tbody = table.querySelector("tbody");
-  if (!thead || !tbody) return;
-
-  // Add header
-  const headerRow = thead.querySelector("tr");
-  if (headerRow) {
-    const endTh = headerRow.querySelector('th[data-ht-sort-index="END_TIMERECORD"]');
-    if (endTh) {
-      const th = document.createElement("th");
-      th.classList.add(KOTDIFF_MARKER_CLASS, "kotdiff-center");
-      const p = document.createElement("p");
-      p.textContent = "休憩";
-      th.appendChild(p);
-      endTh.after(th);
-    }
-  }
-
-  // Add body cells
-  const rows = tbody.querySelectorAll("tr");
-  for (const row of rows) {
-    const endTd = row.querySelector<HTMLTableCellElement>(
-      'td[data-ht-sort-index="END_TIMERECORD"]',
-    );
-    if (!endTd) continue;
-
-    const restStartCell = row.querySelector<HTMLTableCellElement>(
-      'td[data-ht-sort-index="REST_START_TIMERECORD"]',
-    );
-    const restEndCell = row.querySelector<HTMLTableCellElement>(
-      'td[data-ht-sort-index="REST_END_TIMERECORD"]',
-    );
-
-    const starts = extractTimeStrings(restStartCell?.textContent ?? "");
-    const ends = extractTimeStrings(restEndCell?.textContent ?? "");
-    const pairs = formatBreakPairs(starts, ends);
-
-    const td = document.createElement("td");
-    td.classList.add(KOTDIFF_MARKER_CLASS, "kotdiff-center");
-    if (pairs.length > 0) {
-      const p = document.createElement("p");
-      for (let i = 0; i < pairs.length; i++) {
-        if (i > 0) p.appendChild(document.createElement("br"));
-        p.appendChild(document.createTextNode(pairs[i]));
-      }
-      td.appendChild(p);
-    }
-    endTd.after(td);
-  }
-}
-
 function addColumnTooltips(table: HTMLTableElement): void {
   const headerRow = table.querySelector("thead > tr");
   const tbody = table.querySelector("tbody");
@@ -254,7 +110,7 @@ function addDiffHeader(table: HTMLTableElement): void {
   headerRow.appendChild(th);
 }
 
-function main(simpleMode: boolean): void {
+function main(): void {
   const table = document.querySelector<HTMLTableElement>(".htBlock-adjastableTableF_inner > table");
   if (!table) {
     console.log("[kotdiff] table not found");
@@ -270,13 +126,6 @@ function main(simpleMode: boolean): void {
 
   // Inject CSS styles for all kotdiff elements
   injectStyles();
-
-  // Simple display mode: hide unnecessary columns and add attendance/break summary columns
-  if (simpleMode) {
-    injectSimpleModeStyles();
-    addAttendanceColumn(table);
-    addBreakColumn(table);
-  }
 
   // Add diff header
   addDiffHeader(table);
@@ -365,7 +214,7 @@ function main(simpleMode: boolean): void {
   }
   table.parentElement?.insertBefore(banner, table);
 
-  // Add tooltips to all cells (works in both modes, supplements sticky header)
+  // Add tooltips to all cells (supplements sticky header)
   addColumnTooltips(table);
 
   // Set up periodic update for in-progress row
@@ -445,11 +294,10 @@ function isAlreadyInjected(): boolean {
 async function waitForTable(): Promise<void> {
   const result = await chrome.storage.local.get({
     [STORAGE_KEY]: DEFAULT_ENABLED,
-    [SIMPLE_MODE_KEY]: DEFAULT_SIMPLE_MODE,
+    [DASHBOARD_KEY]: DEFAULT_DASHBOARD,
   });
   if (!result[STORAGE_KEY]) {
     console.log("[kotdiff] disabled");
-
     return;
   }
 
@@ -458,21 +306,119 @@ async function waitForTable(): Promise<void> {
     return;
   }
 
-  const simpleMode: boolean = result[SIMPLE_MODE_KEY];
+  const dashboardEnabled: boolean = result[DASHBOARD_KEY];
 
   const selector = ".htBlock-adjastableTableF_inner > table";
   if (document.querySelector(selector)) {
-    main(simpleMode);
+    main();
+    if (dashboardEnabled) injectDashboardButton();
     return;
   }
   console.log("[kotdiff] waiting for table");
   const observer = new MutationObserver((_mutations, obs) => {
     if (document.querySelector(selector)) {
       obs.disconnect();
-      main(simpleMode);
+      main();
+      if (dashboardEnabled) injectDashboardButton();
     }
   });
   observer.observe(document.body, { childList: true, subtree: true });
+}
+
+function injectDashboardButton(): void {
+  const banner = document.querySelector<HTMLElement>(`div.${KOTDIFF_MARKER_CLASS}`);
+  if (!banner) return;
+
+  const btn = document.createElement("button");
+  btn.textContent = "📊 ダッシュボード";
+  btn.style.cssText =
+    "margin-top: 8px; padding: 4px 12px; border: 1px solid #7986cb; border-radius: 4px; background: #fff; color: #333; cursor: pointer; font-size: 13px;";
+
+  btn.addEventListener("click", async () => {
+    const table = document.querySelector<HTMLTableElement>(
+      ".htBlock-adjastableTableF_inner > table",
+    );
+    if (!table) return;
+
+    const dashboardData = buildDashboardDataFromTable(table);
+    await chrome.storage.local.set({ kotdiff_dashboard_data: dashboardData });
+    chrome.runtime.sendMessage({ type: "kotdiff-open-dashboard" });
+  });
+
+  banner.appendChild(btn);
+}
+
+function scrapeLeaveBalances(): LeaveBalance[] {
+  const balances: LeaveBalance[] = [];
+  const entries = document.querySelectorAll(".specific-daysCount_1 li");
+  for (const li of entries) {
+    const label = li.querySelector("label")?.textContent?.trim() ?? "";
+    const div = li.querySelector("div");
+    if (!label || !div) continue;
+    const { used, remaining } = parseLeaveBalanceText(div.textContent ?? "");
+    balances.push({ label, used, remaining });
+  }
+  return balances;
+}
+
+function buildDashboardDataFromTable(table: HTMLTableElement): DashboardData {
+  const tbody = table.querySelector("tbody");
+  if (!tbody) return { rows: [], leaveBalances: [], generatedAt: new Date().toISOString() };
+
+  const rows: DashboardRow[] = [];
+  for (const row of tbody.querySelectorAll("tr")) {
+    const dayCell = row.querySelector<HTMLTableCellElement>('td[data-ht-sort-index="WORK_DAY"]');
+    const date = dayCell?.textContent?.trim() ?? "";
+    const dayType =
+      row
+        .querySelector<HTMLTableCellElement>('td[data-ht-sort-index="WORK_DAY_TYPE"]')
+        ?.textContent?.trim() ?? "";
+
+    const isWeekend =
+      dayCell?.classList.contains("htBlock-scrollTable_saturday") ||
+      dayCell?.classList.contains("htBlock-scrollTable_sunday") ||
+      false;
+
+    const actual = getCellValue(row, "ALL_WORK_MINUTE");
+    const fixedWork = getCellValue(row, "FIXED_WORK_MINUTE");
+    const overtime = getCellValue(row, "OVERTIME_WORK_MINUTE");
+    const breakTime = getCellValue(row, "REST_MINUTE");
+
+    const startCell = getCell(row, "START_TIMERECORD");
+    const startTimes = extractTimeStrings(startCell?.textContent ?? "");
+    const startTime = startTimes[0] ?? null;
+
+    const endCell = getCell(row, "END_TIMERECORD");
+    const endTimes = extractTimeStrings(endCell?.textContent ?? "");
+    const endTime = endTimes[0] ?? null;
+
+    const restStartCell = getCell(row, "REST_START_TIMERECORD");
+    const breakStarts = extractTimeStrings(restStartCell?.textContent ?? "");
+
+    const restEndCell = getCell(row, "REST_END_TIMERECORD");
+    const breakEnds = extractTimeStrings(restEndCell?.textContent ?? "");
+
+    const scheduleCell = getCell(row, "SCHEDULE");
+    const schedule = scheduleCell?.textContent?.trim() || null;
+
+    rows.push({
+      date,
+      dayType,
+      isWeekend,
+      actual,
+      fixedWork,
+      overtime,
+      breakTime,
+      startTime,
+      endTime,
+      breakStarts,
+      breakEnds,
+      schedule,
+    });
+  }
+
+  const leaveBalances = scrapeLeaveBalances();
+  return { rows, leaveBalances, generatedAt: new Date().toISOString() };
 }
 
 chrome.runtime.onMessage.addListener((message) => {
@@ -483,7 +429,7 @@ chrome.runtime.onMessage.addListener((message) => {
       waitForTable();
     }
   }
-  if (message.type === "kotdiff-simple-mode-changed") {
+  if (message.type === "kotdiff-dashboard-changed") {
     location.reload();
   }
 });
