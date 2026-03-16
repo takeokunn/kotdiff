@@ -18,6 +18,8 @@ import {
   isBreakSufficient,
   isWorkingDay,
   nowAsDecimalHours,
+  calcNightWork,
+  parseAllTimeRecords,
 } from "./worktime";
 import { DASHBOARD_KEY, DEFAULT_DASHBOARD, DEFAULT_ENABLED, STORAGE_KEY } from "./storage";
 import type { DashboardData, DashboardRow, LeaveBalance } from "./types";
@@ -402,7 +404,19 @@ function buildDashboardDataFromTable(table: HTMLTableElement): DashboardData {
     const schedule = scheduleCell?.textContent?.trim() || null;
 
     const working = isWorkingDay(row);
-    const nightOvertime = getCellValue(row, "NIGHT_OVERTIME_WORK_MINUTE");
+
+    // KOT の深夜残業列は空のため、出退勤・休憩時刻から計算する
+    let nightOvertime: number | null = null;
+    if (startTime && endTime) {
+      const startNums = parseAllTimeRecords(startCell?.textContent ?? "");
+      const endNums = parseAllTimeRecords(endCell?.textContent ?? "");
+      const breakStartNums = parseAllTimeRecords(restStartCell?.textContent ?? "");
+      const breakEndNums = parseAllTimeRecords(restEndCell?.textContent ?? "");
+      if (startNums.length > 0 && endNums.length > 0) {
+        const nw = calcNightWork(startNums[0], endNums[0], breakStartNums, breakEndNums);
+        nightOvertime = nw > 0 ? nw : null;
+      }
+    }
 
     rows.push({
       date,
