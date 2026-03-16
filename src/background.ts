@@ -49,12 +49,11 @@ chrome.runtime.onMessage.addListener((message) => {
     chrome.tabs.create({ url });
   }
   if (message.type === "kotdiff-refresh-dashboard") {
-    // KOT のタブを探してデータ再収集を依頼
+    // KOT のタブを探してデータ再収集を依頼（最初の1タブのみ）
     chrome.tabs.query({ url: "*://s2.kingtime.jp/*" }, (tabs) => {
-      for (const tab of tabs) {
-        if (tab.id !== undefined) {
-          chrome.tabs.sendMessage(tab.id, { type: "kotdiff-rescrape" }).catch(() => {});
-        }
+      const tab = tabs[0];
+      if (tab?.id !== undefined) {
+        chrome.tabs.sendMessage(tab.id, { type: "kotdiff-rescrape" }).catch(() => {});
       }
     });
   }
