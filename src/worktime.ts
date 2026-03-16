@@ -307,6 +307,7 @@ export interface DashboardSummary {
   totalExpected: number;
   cumulativeDiff: number;
   totalOvertime: number;
+  totalNightOvertime: number;
   avgWorkTime: number;
   projectedTotal: number;
   progressPercent: number;
@@ -329,6 +330,7 @@ export interface DailyRowSummary {
   breakStarts: string[];
   breakEnds: string[];
   schedule: string | null;
+  nightOvertime: number | null;
 }
 
 export function buildDashboardSummary(data: DashboardData): DashboardSummary {
@@ -338,6 +340,7 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
   let totalExpected = 0;
   let cumulativeDiff = 0;
   let totalOvertime = 0;
+  let totalNightOvertime = 0;
   const dailyRows: DailyRowSummary[] = [];
 
   for (const row of data.rows) {
@@ -362,6 +365,9 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
       if (row.overtime !== null) {
         totalOvertime += row.overtime;
       }
+      if (row.nightOvertime !== null) {
+        totalNightOvertime += row.nightOvertime;
+      }
     } else if (isWorkDay) {
       // Future work day or no data
     }
@@ -381,6 +387,7 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
       breakStarts: row.breakStarts,
       breakEnds: row.breakEnds,
       schedule: row.schedule,
+      nightOvertime: row.nightOvertime,
     });
   }
 
@@ -397,6 +404,7 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
     totalExpected,
     cumulativeDiff,
     totalOvertime,
+    totalNightOvertime,
     avgWorkTime,
     projectedTotal,
     progressPercent,

@@ -853,6 +853,8 @@ function makeDashboardRow(overrides: Partial<DashboardRow> = {}): DashboardRow {
     breakStarts: [],
     breakEnds: [],
     schedule: null,
+    working: true,
+    nightOvertime: null,
     ...overrides,
   };
 }
