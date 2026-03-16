@@ -334,12 +334,21 @@ export interface DailyRowSummary {
 }
 
 export function buildDashboardSummary(data: DashboardData): DashboardSummary {
-  let totalWorkDays = 0;
-  let workedDays = 0;
+  // Use accumulateRows for summary totals (single source of truth)
+  const rowInputs: RowInput[] = data.rows.map((row) => ({
+    actual: row.actual,
+    fixedWork: row.fixedWork,
+    working: row.working,
+    inProgress: null,
+  }));
+  const acc = accumulateRows(rowInputs);
+
+  // Build per-row details and collect night overtime
   let totalActual = 0;
   let totalExpected = 0;
-  let cumulativeDiff = 0;
-  let totalOvertime = 0;
+  let workedDays = 0;
+  let totalWorkDays = 0;
+  let perRowCumulativeDiff = 0;
   let totalNightOvertime = 0;
   const dailyRows: DailyRowSummary[] = [];
 
@@ -358,18 +367,13 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
       workedDays++;
       totalActual += row.actual;
       totalExpected += expected;
-      cumulativeDiff += row.actual - expected;
+      perRowCumulativeDiff += row.actual - expected;
       diff = row.actual - expected;
-      cumDiff = cumulativeDiff;
+      cumDiff = perRowCumulativeDiff;
 
-      if (row.fixedWork !== null) {
-        totalOvertime += row.actual - row.fixedWork;
-      }
       if (row.nightOvertime !== null) {
         totalNightOvertime += row.nightOvertime;
       }
-    } else if (isWorkDay) {
-      // Future work day or no data
     }
 
     dailyRows.push({
@@ -391,19 +395,18 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
     });
   }
 
-  const remainingDays = totalWorkDays - workedDays;
   const avgWorkTime = workedDays > 0 ? totalActual / workedDays : 0;
-  const projectedTotal = workedDays > 0 ? totalActual + remainingDays * avgWorkTime : 0;
+  const projectedTotal = workedDays > 0 ? totalActual + acc.remainingDays * avgWorkTime : 0;
   const progressPercent = totalExpected > 0 ? (totalActual / totalExpected) * 100 : 0;
 
   return {
     totalWorkDays,
     workedDays,
-    remainingDays,
+    remainingDays: acc.remainingDays,
     totalActual,
     totalExpected,
-    cumulativeDiff,
-    totalOvertime,
+    cumulativeDiff: acc.cumulativeDiff,
+    totalOvertime: acc.overtimeDiff,
     totalNightOvertime,
     avgWorkTime,
     projectedTotal,
