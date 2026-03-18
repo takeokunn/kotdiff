@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatBreakPairs(starts: string[], ends: string[]): string[] {
+export function formatBreakPairs(starts: readonly string[], ends: readonly string[]): string[] {
   const len = Math.max(starts.length, ends.length);
   const pairs: string[] = [];
   for (let i = 0; i < len; i++) {

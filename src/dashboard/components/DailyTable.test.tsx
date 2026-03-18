@@ -1,28 +1,7 @@
-import { describe, test, expect } from "vitest";
+import { describe, it, test, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { DailyTable } from "./DailyTable";
-import type { DailyRowSummary } from "../../domain/aggregates/WorkMonth";
-
-function makeRow(overrides: Partial<DailyRowSummary> = {}): DailyRowSummary {
-  return {
-    date: "03/01（月）",
-    dayType: "weekday",
-    isWeekend: false,
-    actual: 8,
-    expected: 8,
-    diff: 0,
-    cumulativeDiff: 0,
-    overtime: 0,
-    breakTime: 1,
-    startTime: "09:00",
-    endTime: "18:00",
-    breakStarts: ["12:00"],
-    breakEnds: ["13:00"],
-    schedule: null,
-    nightOvertime: null,
-    ...overrides,
-  };
-}
+import { makeWorkedRow, makeUnworkedRow, makeRow } from "../test-helpers";
 
 describe("DailyTable", () => {
   test("renders table header columns", () => {
@@ -58,12 +37,12 @@ describe("DailyTable", () => {
   });
 
   test("displays OFF for weekend rows with null actual", () => {
-    render(<DailyTable rows={[makeRow({ actual: null, isWeekend: true, expected: 0 })]} />);
+    render(<DailyTable rows={[makeUnworkedRow({ isWeekend: true, expected: 0 })]} />);
     expect(screen.getByText("OFF")).toBeInTheDocument();
   });
 
   test("displays dash for weekday rows with null actual and non-zero expected", () => {
-    render(<DailyTable rows={[makeRow({ actual: null, isWeekend: false, expected: 8 })]} />);
+    render(<DailyTable rows={[makeUnworkedRow({ isWeekend: false, expected: 8 })]} />);
     // The "-" could appear in multiple cells (diff, cumDiff, etc.) so use getAllByText
     const dashes = screen.getAllByText("-");
     expect(dashes.length).toBeGreaterThan(0);
@@ -97,5 +76,19 @@ describe("DailyTable", () => {
     const { container } = render(<DailyTable rows={[]} />);
     const tbody = container.querySelector("tbody");
     expect(tbody?.children.length).toBe(0);
+  });
+
+  it("renders worked row with null start/end times without crashing", () => {
+    const row = makeWorkedRow({ startTime: null, endTime: null });
+    const { container } = render(<DailyTable rows={[row]} />);
+    // Row is rendered without crashing
+    expect(screen.getByText("03/01（月）")).toBeInTheDocument();
+    // Attendance time range is not shown when both times are null
+    expect(screen.queryByText(/~/)).not.toBeInTheDocument();
+    // actual hours are still shown
+    expect(screen.getByText("8:00")).toBeInTheDocument();
+    // Timeline bar cell is present but empty (no segments)
+    const tbody = container.querySelector("tbody");
+    expect(tbody?.children.length).toBe(1);
   });
 });

@@ -9,7 +9,7 @@ const mockDashboardData: DashboardData = {
   rows: [
     {
       date: "03/01（月）",
-      dayType: "weekday",
+      dayType: "平日",
       isWeekend: false,
       actual: 8,
       fixedWork: 8,

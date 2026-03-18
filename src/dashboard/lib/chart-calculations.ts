@@ -14,7 +14,7 @@
  */
 export function extractWeekday(date: string): string | null {
   const m = date.match(/[（(]([月火水木金土日])[）)]/);
-  return m ? m[1] : null;
+  return m ? (m[1] ?? null) : null;
 }
 
 /**

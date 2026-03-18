@@ -68,7 +68,7 @@ export function OvertimeGauge({ totalOvertime }: OvertimeGaugeProps) {
                 strokeWidth={STROKE}
                 strokeLinecap="round"
                 className="chart-gauge"
-                style={{ "--arc-length": arcLen } as React.CSSProperties}
+                style={{ "--arc-length": arcLen }}
               />
             );
           })()}

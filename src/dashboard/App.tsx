@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { buildDashboardSummary, type DashboardSummary } from "../domain/aggregates/WorkMonth";
-import type { DashboardData } from "../types";
+import { isDashboardData, type DashboardData } from "../types";
 import { DASHBOARD_DATA_KEY } from "../infrastructure/chrome/constants";
 import { SummaryCards } from "./components/SummaryCards";
 import { ChartPanel } from "./components/ChartPanel";
 import { DailyTable } from "./components/DailyTable";
+
 
 export function App() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -12,7 +13,8 @@ export function App() {
 
   useEffect(() => {
     chrome.storage.local.get(DASHBOARD_DATA_KEY, (result) => {
-      const data: DashboardData | undefined = result[DASHBOARD_DATA_KEY];
+      const rawData = result[DASHBOARD_DATA_KEY];
+      const data = isDashboardData(rawData) ? rawData : undefined;
       if (data) {
         setSummary(buildDashboardSummary(data));
         setGeneratedAt(data.generatedAt);
