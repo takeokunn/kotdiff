@@ -1,24 +1,26 @@
 import type { LeaveBalance } from "../value-objects/LeaveBalance";
+import type { DecimalHours } from "../value-objects/TimeRecord";
 import type { DashboardData } from "../../types";
 import type { WorkDay } from "../entities/WorkDay";
+import type { KotDayType } from "../../types";
 import { DEFAULT_EXPECTED_HOURS } from "../constants";
 
 export interface RowInput {
-  actual: number | null;
-  fixedWork: number | null;
-  working: boolean;
-  inProgress: { estimatedWorkTime: number; isOnBreak: boolean } | null;
+  readonly actual: number | null;
+  readonly fixedWork: number | null;
+  readonly working: boolean;
+  readonly inProgress: { readonly estimatedWorkTime: DecimalHours; readonly status: "working" | "onBreak" } | null;
 }
 
 export interface AccumulateResult {
-  totalWorkDays: number;
-  workedDays: number;
-  remainingDays: number;
-  totalActual: number;
-  totalExpected: number;
-  cumulativeDiff: number;
-  overtimeDiff: number;
-  inProgressEstimatedDiff: number | null;
+  readonly totalWorkDays: number;
+  readonly workedDays: number;
+  readonly remainingDays: number;
+  readonly totalActual: number;
+  readonly totalExpected: number;
+  readonly cumulativeDiff: number;
+  readonly overtimeDiff: number;
+  readonly inProgressEstimatedDiff: number | null;
 }
 
 export function accumulateRows(rows: RowInput[]): AccumulateResult {
@@ -64,41 +66,56 @@ export function accumulateRows(rows: RowInput[]): AccumulateResult {
 }
 
 export interface DashboardSummary {
-  totalWorkDays: number;
-  workedDays: number;
-  remainingDays: number;
-  totalActual: number;
-  totalExpected: number;
-  cumulativeDiff: number;
-  totalOvertime: number;
-  totalNightOvertime: number;
-  avgWorkTime: number;
-  projectedTotal: number;
-  progressPercent: number;
-  leaveBalances: LeaveBalance[];
-  dailyRows: DailyRowSummary[];
+  readonly totalWorkDays: number;
+  readonly workedDays: number;
+  readonly remainingDays: number;
+  readonly totalActual: number;
+  readonly totalExpected: number;
+  readonly cumulativeDiff: number;
+  readonly totalOvertime: number;
+  readonly totalNightOvertime: number;
+  readonly avgWorkTime: number;
+  readonly projectedTotal: number;
+  readonly progressPercent: number;
+  readonly leaveBalances: readonly LeaveBalance[];
+  readonly dailyRows: readonly DailyRowSummary[];
 }
 
-export interface DailyRowSummary {
-  date: string;
-  dayType: string;
-  isWeekend: boolean;
-  actual: number | null;
-  expected: number;
-  diff: number | null;
-  cumulativeDiff: number | null;
-  overtime: number | null;
-  breakTime: number | null;
-  startTime: string | null;
-  endTime: string | null;
-  breakStarts: string[];
-  breakEnds: string[];
-  schedule: string | null;
-  nightOvertime: number | null;
+export interface DailyRowBase {
+  readonly date: string;
+  readonly dayType: KotDayType;
+  readonly isWeekend: boolean;
+  readonly expected: number;
+  readonly breakStarts: readonly string[];
+  readonly breakEnds: readonly string[];
+  readonly schedule: string | null;
 }
 
-// WorkMonthSummary is an alias for DashboardSummary - same shape, different provenance
-export type WorkMonthSummary = DashboardSummary;
+export interface WorkedDailyRow extends DailyRowBase {
+  readonly type: "worked";
+  readonly actual: number;
+  readonly diff: number;
+  readonly cumulativeDiff: number;
+  readonly overtime: number | null;
+  readonly breakTime: number | null;
+  readonly startTime: string | null;
+  readonly endTime: string | null;
+  readonly nightOvertime: number | null;
+}
+
+export interface UnworkedDailyRow extends DailyRowBase {
+  readonly type: "unworked";
+  readonly actual: null;
+  readonly diff: null;
+  readonly cumulativeDiff: null;
+  readonly overtime: null;
+  readonly breakTime: null;
+  readonly startTime: null;
+  readonly endTime: null;
+  readonly nightOvertime: null;
+}
+
+export type DailyRowSummary = WorkedDailyRow | UnworkedDailyRow;
 
 export function buildDashboardSummary(data: DashboardData): DashboardSummary {
   // Use accumulateRows as the single source of truth for all summary totals
@@ -132,23 +149,45 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
       totalNightOvertime += row.nightOvertime;
     }
 
-    dailyRows.push({
-      date: row.date,
-      dayType: row.dayType,
-      isWeekend: row.isWeekend,
-      actual: row.actual,
-      expected,
-      diff,
-      cumulativeDiff: cumDiff,
-      overtime: row.overtime,
-      breakTime: row.breakTime,
-      startTime: row.startTime,
-      endTime: row.endTime,
-      breakStarts: [...row.breakStarts],
-      breakEnds: [...row.breakEnds],
-      schedule: row.schedule,
-      nightOvertime: row.nightOvertime,
-    });
+    if (row.actual !== null && diff !== null && cumDiff !== null) {
+      dailyRows.push({
+        type: "worked",
+        date: row.date,
+        dayType: row.dayType,
+        isWeekend: row.isWeekend,
+        actual: row.actual,
+        expected,
+        diff,
+        cumulativeDiff: cumDiff,
+        overtime: row.overtime,
+        breakTime: row.breakTime,
+        startTime: row.startTime,
+        endTime: row.endTime,
+        breakStarts: [...row.breakStarts],
+        breakEnds: [...row.breakEnds],
+        schedule: row.schedule,
+        nightOvertime: row.nightOvertime,
+      });
+    } else {
+      dailyRows.push({
+        type: "unworked",
+        date: row.date,
+        dayType: row.dayType,
+        isWeekend: row.isWeekend,
+        actual: null,
+        expected,
+        diff: null,
+        cumulativeDiff: null,
+        overtime: null,
+        breakTime: null,
+        startTime: null,
+        endTime: null,
+        breakStarts: [...row.breakStarts],
+        breakEnds: [...row.breakEnds],
+        schedule: row.schedule,
+        nightOvertime: null,
+      });
+    }
   }
 
   const avgWorkTime = acc.workedDays > 0 ? acc.totalActual / acc.workedDays : 0;
@@ -181,7 +220,7 @@ function toTimeStr(h: number): string {
 export function buildWorkMonthSummary(
   days: WorkDay[],
   leaveBalances: LeaveBalance[],
-): WorkMonthSummary {
+): DashboardSummary {
   const rowInputs: RowInput[] = days.map((day) => ({
     actual: day.actual,
     fixedWork: day.fixedWork,
@@ -210,23 +249,45 @@ export function buildWorkMonthSummary(
       totalNightOvertime += day.nightOvertime;
     }
 
-    dailyRows.push({
-      date: day.date,
-      dayType: day.dayType,
-      isWeekend: day.isWeekend,
-      actual: day.actual,
-      expected,
-      diff,
-      cumulativeDiff: cumDiff,
-      overtime: day.overtime,
-      breakTime: day.breakTime,
-      startTime: day.startTime !== null ? toTimeStr(day.startTime) : null,
-      endTime: day.endTime !== null ? toTimeStr(day.endTime) : null,
-      breakStarts: day.breakStarts.map(toTimeStr),
-      breakEnds: day.breakEnds.map(toTimeStr),
-      schedule: day.schedule,
-      nightOvertime: day.nightOvertime,
-    });
+    if (day.actual !== null && diff !== null && cumDiff !== null) {
+      dailyRows.push({
+        type: "worked",
+        date: day.date,
+        dayType: day.dayType,
+        isWeekend: day.isWeekend,
+        actual: day.actual,
+        expected,
+        diff,
+        cumulativeDiff: cumDiff,
+        overtime: day.overtime,
+        breakTime: day.breakTime,
+        startTime: day.startTime !== null ? toTimeStr(day.startTime) : null,
+        endTime: day.endTime !== null ? toTimeStr(day.endTime) : null,
+        breakStarts: day.breakStarts.map(toTimeStr),
+        breakEnds: day.breakEnds.map(toTimeStr),
+        schedule: day.schedule,
+        nightOvertime: day.nightOvertime,
+      });
+    } else {
+      dailyRows.push({
+        type: "unworked",
+        date: day.date,
+        dayType: day.dayType,
+        isWeekend: day.isWeekend,
+        actual: null,
+        expected,
+        diff: null,
+        cumulativeDiff: null,
+        overtime: null,
+        breakTime: null,
+        startTime: null,
+        endTime: null,
+        breakStarts: day.breakStarts.map(toTimeStr),
+        breakEnds: day.breakEnds.map(toTimeStr),
+        schedule: day.schedule,
+        nightOvertime: null,
+      });
+    }
   }
 
   const avgWorkTime = acc.workedDays > 0 ? acc.totalActual / acc.workedDays : 0;

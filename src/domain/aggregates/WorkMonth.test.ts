@@ -1,13 +1,20 @@
 import { describe, expect, test } from "vitest";
+
+import { defined } from "../../test-utils";
 import {
   type RowInput,
   accumulateRows,
   buildDashboardSummary,
   buildWorkMonthSummary,
-  type WorkMonthSummary,
+  type DashboardSummary,
 } from "./WorkMonth";
 import type { DashboardData, DashboardRow } from "../../types";
 import type { WorkDay } from "../entities/WorkDay";
+import { asDecimalHours } from "../value-objects/TimeRecord";
+
+function dh(n: number) {
+  return asDecimalHours(n);
+}
 
 function makeDashboardRow(overrides: Partial<DashboardRow> = {}): DashboardRow {
   return {
@@ -74,7 +81,7 @@ describe("accumulateRows", () => {
         actual: null,
         fixedWork: 8,
         working: true,
-        inProgress: { estimatedWorkTime: 3, isOnBreak: false },
+        inProgress: { estimatedWorkTime: dh(3), status: "working" },
       },
     ];
     const result = accumulateRows(rows);
@@ -150,10 +157,10 @@ describe("buildDashboardSummary", () => {
     // day1: 9 - 8 = 1, day2: 7.5 - 8 = -0.5, total = 0.5
     expect(summary.totalOvertime).toBeCloseTo(0.5);
     expect(summary.avgWorkTime).toBeCloseTo(8.25);
-    expect(summary.dailyRows[0].diff).toBeCloseTo(1);
-    expect(summary.dailyRows[0].cumulativeDiff).toBeCloseTo(1);
-    expect(summary.dailyRows[1].diff).toBeCloseTo(-0.5);
-    expect(summary.dailyRows[1].cumulativeDiff).toBeCloseTo(0.5);
+    expect(defined(summary.dailyRows[0]).diff).toBeCloseTo(1);
+    expect(defined(summary.dailyRows[0]).cumulativeDiff).toBeCloseTo(1);
+    expect(defined(summary.dailyRows[1]).diff).toBeCloseTo(-0.5);
+    expect(defined(summary.dailyRows[1]).cumulativeDiff).toBeCloseTo(0.5);
   });
 
   test("working: false rows are excluded from work day counts", () => {
@@ -257,7 +264,7 @@ function makeWorkDay(overrides: Partial<WorkDay> = {}): WorkDay {
 
 describe("buildWorkMonthSummary", () => {
   test("empty days returns zero totals", () => {
-    const summary: WorkMonthSummary = buildWorkMonthSummary([], []);
+    const summary: DashboardSummary = buildWorkMonthSummary([], []);
     expect(summary.totalWorkDays).toBe(0);
     expect(summary.workedDays).toBe(0);
     expect(summary.remainingDays).toBe(0);
@@ -280,10 +287,10 @@ describe("buildWorkMonthSummary", () => {
     expect(summary.cumulativeDiff).toBeCloseTo(0.5);
     expect(summary.totalOvertime).toBeCloseTo(0.5);
     expect(summary.avgWorkTime).toBeCloseTo(8.25);
-    expect(summary.dailyRows[0].diff).toBeCloseTo(1);
-    expect(summary.dailyRows[0].cumulativeDiff).toBeCloseTo(1);
-    expect(summary.dailyRows[1].diff).toBeCloseTo(-0.5);
-    expect(summary.dailyRows[1].cumulativeDiff).toBeCloseTo(0.5);
+    expect(defined(summary.dailyRows[0]).diff).toBeCloseTo(1);
+    expect(defined(summary.dailyRows[0]).cumulativeDiff).toBeCloseTo(1);
+    expect(defined(summary.dailyRows[1]).diff).toBeCloseTo(-0.5);
+    expect(defined(summary.dailyRows[1]).cumulativeDiff).toBeCloseTo(0.5);
   });
 
   test("weekend days (working: false) excluded from work day counts", () => {
@@ -295,7 +302,7 @@ describe("buildWorkMonthSummary", () => {
     expect(summary.totalWorkDays).toBe(0);
     expect(summary.workedDays).toBe(0);
     expect(summary.dailyRows).toHaveLength(2);
-    expect(summary.dailyRows[0].expected).toBe(0);
+    expect(defined(summary.dailyRows[0]).expected).toBe(0);
   });
 
   test("startTime and endTime are converted from decimal hours to time strings", () => {
@@ -304,17 +311,17 @@ describe("buildWorkMonthSummary", () => {
         date: "03/01（月）",
         actual: 8,
         fixedWork: 8,
-        startTime: 9.5, // 9:30
-        endTime: 18.75, // 18:45
-        breakStarts: [12.0],
-        breakEnds: [13.0],
+        startTime: dh(9.5), // 9:30
+        endTime: dh(18.75), // 18:45
+        breakStarts: [dh(12.0)],
+        breakEnds: [dh(13.0)],
       }),
     ];
     const summary = buildWorkMonthSummary(days, []);
-    expect(summary.dailyRows[0].startTime).toBe("9:30");
-    expect(summary.dailyRows[0].endTime).toBe("18:45");
-    expect(summary.dailyRows[0].breakStarts).toEqual(["12:00"]);
-    expect(summary.dailyRows[0].breakEnds).toEqual(["13:00"]);
+    expect(defined(summary.dailyRows[0]).startTime).toBe("9:30");
+    expect(defined(summary.dailyRows[0]).endTime).toBe("18:45");
+    expect(defined(summary.dailyRows[0]).breakStarts).toEqual(["12:00"]);
+    expect(defined(summary.dailyRows[0]).breakEnds).toEqual(["13:00"]);
   });
 
   test("nightOvertime is aggregated into totalNightOvertime", () => {
