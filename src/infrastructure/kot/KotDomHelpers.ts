@@ -1,10 +1,7 @@
 import { parseWorkTime } from "../../domain/value-objects/TimeRecord";
 import { parseAllTimeRecords } from "../../domain/services/WorkTimeParser";
 import type { InProgressRowData } from "../../domain/value-objects/InProgressWork";
-
-const SATURDAY_CLASS = "htBlock-scrollTable_saturday";
-const SUNDAY_CLASS = "htBlock-scrollTable_sunday";
-const PUBLIC_HOLIDAY_KEYWORD = "公休";
+import { SATURDAY_CLASS, SUNDAY_CLASS, PUBLIC_HOLIDAY_KEYWORD } from "./constants";
 
 export function getCell(row: Element, sortIndex: string): HTMLTableCellElement | null {
   return row.querySelector<HTMLTableCellElement>(`td[data-ht-sort-index="${sortIndex}"]`);
@@ -23,7 +20,8 @@ function isWeekday(row: Element): boolean {
   return !dayCell.classList.contains(SATURDAY_CLASS) && !dayCell.classList.contains(SUNDAY_CLASS);
 }
 
-function getCellText(row: Element, sortIndex: string): string {
+// Returns raw trimmed text content of a cell; use getCellValue for numeric work-time parsing
+export function getCellText(row: Element, sortIndex: string): string {
   const cell = getCell(row, sortIndex);
   if (!cell) return "";
   return cell.textContent?.trim() ?? "";

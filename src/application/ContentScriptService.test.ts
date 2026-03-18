@@ -133,7 +133,7 @@ describe("ContentScriptService", () => {
 
       await service.run();
 
-      expect(consoleSpy).toHaveBeenCalledWith("[kotdiff] already injected");
+      expect(consoleSpy).toHaveBeenCalledWith("[kotdiff] already injecting or injected");
       expect(storage.getDashboardEnabled).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
@@ -149,6 +149,18 @@ describe("ContentScriptService", () => {
 
       expect(storage.getDashboardEnabled).toHaveBeenCalledTimes(1);
       consoleSpy.mockRestore();
+    });
+
+    test("concurrent run() calls do not double-inject", async () => {
+      const mockDom = createMockDom();
+      vi.mocked(storage.getEnabled).mockResolvedValue(true);
+      vi.mocked(storage.getDashboardEnabled).mockResolvedValue(false);
+      const localService = createContentScriptService(storage, messaging, createMockTimer(), mockDom);
+
+      await Promise.all([localService.run(), localService.run()]);
+
+      // Second call should be blocked by the injecting flag before reaching getDashboardEnabled
+      expect(storage.getDashboardEnabled).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -44,6 +44,9 @@ export function createContentScriptService(
   timer: TimerPort = browserTimerAdapter,
   dom: DomReadyPort = browserDomAdapter,
 ): ContentScriptServiceInstance {
+  // Guards against concurrent calls to run() before the DOM marker is written
+  let injecting = false;
+
   function isAlreadyInjected(): boolean {
     return dom.isAlreadyInjected(KOTDIFF_MARKER_CLASS);
   }
@@ -155,14 +158,16 @@ export function createContentScriptService(
   }
 
   async function run(): Promise<void> {
-    const enabled = await storage.getEnabled();
-    if (!enabled) {
-      console.log("[kotdiff] disabled");
+    if (injecting || isAlreadyInjected()) {
+      console.log("[kotdiff] already injecting or injected");
       return;
     }
+    injecting = true;
 
-    if (isAlreadyInjected()) {
-      console.log("[kotdiff] already injected");
+    const enabled = await storage.getEnabled();
+    if (!enabled) {
+      injecting = false;
+      console.log("[kotdiff] disabled");
       return;
     }
 
@@ -171,12 +176,14 @@ export function createContentScriptService(
     const selector = ".htBlock-adjastableTableF_inner > table";
     if (dom.querySelector(selector)) {
       inject(dashboardEnabled);
+      injecting = false;
       return;
     }
 
     console.log("[kotdiff] waiting for table");
     dom.waitForElement(selector, () => {
       inject(dashboardEnabled);
+      injecting = false;
     });
   }
 

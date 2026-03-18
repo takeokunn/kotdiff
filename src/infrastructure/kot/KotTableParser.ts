@@ -1,15 +1,8 @@
 import { rawRowToWorkDay, workDayToDashboardRow } from "./WorkDayMapper";
 import type { DashboardRow } from "../../types";
 import type { RawTableRow } from "./RawTableRow";
-
-const SATURDAY_CLASS = "htBlock-scrollTable_saturday";
-const SUNDAY_CLASS = "htBlock-scrollTable_sunday";
-const PUBLIC_HOLIDAY_KEYWORD = "公休";
-
-function getCellText(row: Element, sortIndex: string): string {
-  const cell = row.querySelector<HTMLTableCellElement>(`td[data-ht-sort-index="${sortIndex}"]`);
-  return cell?.textContent?.trim() ?? "";
-}
+import { SATURDAY_CLASS, SUNDAY_CLASS, PUBLIC_HOLIDAY_KEYWORD } from "./constants";
+import { getCellText } from "./KotDomHelpers";
 
 export function parseRow(row: Element): RawTableRow {
   const dayCell = row.querySelector<HTMLTableCellElement>('td[data-ht-sort-index="WORK_DAY"]');
