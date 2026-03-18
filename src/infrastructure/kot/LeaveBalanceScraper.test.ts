@@ -1,6 +1,8 @@
 import { describe, test, expect } from "vitest";
 import { scrapeLeaveBalances } from "./LeaveBalanceScraper";
 
+import { defined } from "../../test-utils";
+
 describe("scrapeLeaveBalances", () => {
   test("returns empty array when no elements found", () => {
     const div = document.createElement("div");
@@ -19,9 +21,9 @@ describe("scrapeLeaveBalances", () => {
     `;
     const result = scrapeLeaveBalances(div);
     expect(result).toHaveLength(1);
-    expect(result[0].label).toBe("年次有給休暇");
-    expect(result[0].used).toBe(5.0);
-    expect(result[0].remaining).toBe(10.0);
+    expect(defined(result[0]).label).toBe("年次有給休暇");
+    expect(defined(result[0]).used).toBe(5.0);
+    expect(defined(result[0]).remaining).toBe(10.0);
   });
 
   test("parses multiple leave balance entries", () => {
@@ -40,12 +42,12 @@ describe("scrapeLeaveBalances", () => {
     `;
     const result = scrapeLeaveBalances(div);
     expect(result).toHaveLength(2);
-    expect(result[0].label).toBe("年次有給休暇");
-    expect(result[0].used).toBe(3.0);
-    expect(result[0].remaining).toBe(7.0);
-    expect(result[1].label).toBe("特別休暇");
-    expect(result[1].used).toBe(1.0);
-    expect(result[1].remaining).toBe(4.0);
+    expect(defined(result[0]).label).toBe("年次有給休暇");
+    expect(defined(result[0]).used).toBe(3.0);
+    expect(defined(result[0]).remaining).toBe(7.0);
+    expect(defined(result[1]).label).toBe("特別休暇");
+    expect(defined(result[1]).used).toBe(1.0);
+    expect(defined(result[1]).remaining).toBe(4.0);
   });
 
   test("skips entries without label or div", () => {
@@ -63,7 +65,7 @@ describe("scrapeLeaveBalances", () => {
     `;
     const result = scrapeLeaveBalances(div);
     expect(result).toHaveLength(1);
-    expect(result[0].label).toBe("有効なエントリ");
+    expect(defined(result[0]).label).toBe("有効なエントリ");
   });
 
   test("handles entry with no remaining value", () => {
@@ -78,7 +80,7 @@ describe("scrapeLeaveBalances", () => {
     `;
     const result = scrapeLeaveBalances(div);
     expect(result).toHaveLength(1);
-    expect(result[0].used).toBe(5.0);
-    expect(result[0].remaining).toBeNull();
+    expect(defined(result[0]).used).toBe(5.0);
+    expect(defined(result[0]).remaining).toBeNull();
   });
 });

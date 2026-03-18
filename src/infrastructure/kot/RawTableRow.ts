@@ -1,7 +1,9 @@
+import type { KotDayType } from "../../types";
+
 // Raw strings extracted directly from DOM cells — no parsing performed
 export interface RawTableRow {
   readonly date: string;
-  readonly dayType: string;
+  readonly dayType: KotDayType;
   readonly isSaturday: boolean;
   readonly isSunday: boolean;
   readonly allWorkMinuteText: string;

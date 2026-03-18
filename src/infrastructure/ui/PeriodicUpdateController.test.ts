@@ -52,7 +52,7 @@ describe("PeriodicUpdateController", () => {
       return stopTimerSpy;
     });
     vi.spyOn(mockPort, "observeRemoval").mockImplementation((_el, onRemoved) => {
-      mockPort["_storedRemoval"] = onRemoved;
+      (mockPort as unknown as Record<string, unknown>)["_storedRemoval"] = onRemoved;
       return stopObserverSpy;
     });
 

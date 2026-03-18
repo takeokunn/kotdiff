@@ -1,6 +1,6 @@
 import type { TabsPort } from "../ports/TabsPort";
 
-export const chromeTabsAdapter: TabsPort = {
+export const chromeTabsAdapter = {
   async openTab(url: string): Promise<void> {
     await chrome.tabs.create({ url });
   },
@@ -8,4 +8,4 @@ export const chromeTabsAdapter: TabsPort = {
   async sendToTab(tabId: number, message: unknown): Promise<void> {
     await chrome.tabs.sendMessage(tabId, message);
   },
-};
+} satisfies TabsPort;

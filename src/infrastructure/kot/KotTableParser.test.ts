@@ -1,5 +1,8 @@
 import { describe, test, expect } from "vitest";
+
+import { defined } from "../../test-utils";
 import { parseRow, rawRowToDashboardRow, parseKotTable } from "./KotTableParser";
+import type { RawTableRow } from "./RawTableRow";
 
 function createRow(
   data: Record<string, string>,
@@ -107,7 +110,7 @@ describe("rawRowToDashboardRow", () => {
       restEndTimeText: "13:00",
       scheduleText: "",
       hasPublicHoliday: false,
-    };
+    } satisfies RawTableRow;
     const row = rawRowToDashboardRow(raw);
     expect(row.date).toBe("03/04");
     expect(row.isWeekend).toBe(false);
@@ -137,7 +140,7 @@ describe("rawRowToDashboardRow", () => {
       restEndTimeText: "",
       scheduleText: "",
       hasPublicHoliday: false,
-    };
+    } satisfies RawTableRow;
     const row = rawRowToDashboardRow(raw);
     expect(row.isWeekend).toBe(true);
     expect(row.working).toBe(false);
@@ -159,7 +162,7 @@ describe("rawRowToDashboardRow", () => {
       restEndTimeText: "",
       scheduleText: "",
       hasPublicHoliday: false,
-    };
+    } satisfies RawTableRow;
     const row = rawRowToDashboardRow(raw);
     expect(row.isWeekend).toBe(true);
     expect(row.working).toBe(false);
@@ -181,7 +184,7 @@ describe("rawRowToDashboardRow", () => {
       restEndTimeText: "",
       scheduleText: "公休",
       hasPublicHoliday: true,
-    };
+    } satisfies RawTableRow;
     const row = rawRowToDashboardRow(raw);
     expect(row.working).toBe(false);
     expect(row.schedule).toBe("公休");
@@ -203,7 +206,7 @@ describe("rawRowToDashboardRow", () => {
       restEndTimeText: "",
       scheduleText: "フレックス",
       hasPublicHoliday: false,
-    };
+    } satisfies RawTableRow;
     const row = rawRowToDashboardRow(raw);
     expect(row.working).toBe(true);
   });
@@ -224,7 +227,7 @@ describe("rawRowToDashboardRow", () => {
       restEndTimeText: "",
       scheduleText: "",
       hasPublicHoliday: false,
-    };
+    } satisfies RawTableRow;
     const row = rawRowToDashboardRow(raw);
     expect(row.schedule).toBeNull();
   });
@@ -246,7 +249,7 @@ describe("rawRowToDashboardRow", () => {
       restEndTimeText: "",
       scheduleText: "",
       hasPublicHoliday: false,
-    };
+    } satisfies RawTableRow;
     const row = rawRowToDashboardRow(raw);
     expect(row.nightOvertime).not.toBeNull();
     expect(row.nightOvertime).toBeCloseTo(1, 5);
@@ -268,7 +271,7 @@ describe("rawRowToDashboardRow", () => {
       restEndTimeText: "13:00",
       scheduleText: "",
       hasPublicHoliday: false,
-    };
+    } satisfies RawTableRow;
     const row = rawRowToDashboardRow(raw);
     expect(row.nightOvertime).toBeNull();
   });
@@ -301,8 +304,8 @@ describe("parseKotTable", () => {
 
     const rows = parseKotTable(tbody);
     expect(rows).toHaveLength(2);
-    expect(rows[0].date).toBe("03/01");
-    expect(rows[1].date).toBe("03/02");
-    expect(rows[1].hasPublicHoliday).toBe(true);
+    expect(defined(rows[0]).date).toBe("03/01");
+    expect(defined(rows[1]).date).toBe("03/02");
+    expect(defined(rows[1]).hasPublicHoliday).toBe(true);
   });
 });

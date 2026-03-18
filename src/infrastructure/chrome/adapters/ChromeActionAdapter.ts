@@ -1,7 +1,7 @@
-import type { ActionPort } from "../ports/ActionPort";
+import type { ActionPort, HexColor } from "../ports/ActionPort";
 
-export const chromeActionAdapter: ActionPort = {
-  async setBadge(text: string, color: string): Promise<void> {
+export const chromeActionAdapter = {
+  async setBadge(text: string, color: HexColor): Promise<void> {
     await chrome.action.setBadgeText({ text });
     await chrome.action.setBadgeBackgroundColor({ color });
   },
@@ -11,4 +11,4 @@ export const chromeActionAdapter: ActionPort = {
       if (tab.id !== undefined) handler(tab.id);
     });
   },
-};
+} satisfies ActionPort;

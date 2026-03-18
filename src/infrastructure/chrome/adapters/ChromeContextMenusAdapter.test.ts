@@ -1,4 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
+
+import { defined } from "../../../test-utils";
 import { chromeContextMenusAdapter } from "./ChromeContextMenusAdapter";
 
 const mockCreate = vi.fn();
@@ -7,6 +9,9 @@ const mockChrome = {
   contextMenus: {
     create: mockCreate,
     onClicked: { addListener: mockAddListener },
+    ContextType: {
+      ACTION: "action",
+    },
   },
 };
 vi.stubGlobal("chrome", mockChrome);
@@ -21,7 +26,7 @@ describe("ChromeContextMenusAdapter", () => {
       id: "kotdiff-dashboard",
       title: "ダッシュボード",
       type: "checkbox",
-      contexts: ["action"],
+      contexts: [chrome.contextMenus.ContextType.ACTION],
       checked: false,
     });
     expect(mockCreate).toHaveBeenCalledWith({
@@ -49,7 +54,7 @@ describe("ChromeContextMenusAdapter", () => {
     chromeContextMenusAdapter.onClicked(handler);
     expect(mockAddListener).toHaveBeenCalledOnce();
 
-    const registeredListener = mockAddListener.mock.calls[0][0];
+    const registeredListener = defined(mockAddListener.mock.calls[0]?.[0]);
     registeredListener({ menuItemId: "kotdiff-dashboard", checked: true }, { id: 5 });
     expect(handler).toHaveBeenCalledWith({ menuItemId: "kotdiff-dashboard", checked: true }, 5);
   });
@@ -58,7 +63,7 @@ describe("ChromeContextMenusAdapter", () => {
     const handler = vi.fn();
     chromeContextMenusAdapter.onClicked(handler);
 
-    const registeredListener = mockAddListener.mock.calls[0][0];
+    const registeredListener = defined(mockAddListener.mock.calls[0]?.[0]);
     registeredListener({ menuItemId: "kotdiff-dashboard", checked: false }, undefined);
     expect(handler).toHaveBeenCalledWith(
       { menuItemId: "kotdiff-dashboard", checked: false },

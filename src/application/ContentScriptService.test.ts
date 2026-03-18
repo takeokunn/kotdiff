@@ -1,4 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
+
+import { defined } from "../test-utils";
 import {
   createContentScriptService,
   type ContentScriptServiceInstance,
@@ -20,7 +22,7 @@ function createMockDom(): DomReadyPort {
     isAlreadyInjected: vi.fn().mockReturnValue(false),
     querySelector: vi.fn().mockReturnValue(null),
     querySelectorAll: vi.fn().mockReturnValue([]),
-    createElement: vi.fn().mockImplementation((tag: string) => document.createElement(tag)),
+    createElement: vi.fn().mockImplementation(<const K extends keyof HTMLElementTagNameMap>(tag: K) => document.createElement(tag)),
     waitForElement: vi.fn(),
     reload: vi.fn(),
   };
@@ -180,7 +182,7 @@ describe("ContentScriptService", () => {
       );
       localService.listenForMessages();
 
-      const handler = vi.mocked(messaging.onMessage).mock.calls[0][0];
+      const handler = defined(vi.mocked(messaging.onMessage).mock.calls[0]?.[0]);
       handler({ type: "kotdiff-toggle", enabled: false });
 
       expect(mockDom.reload).toHaveBeenCalledTimes(1);
@@ -190,7 +192,7 @@ describe("ContentScriptService", () => {
       vi.mocked(storage.getEnabled).mockResolvedValue(false);
       service.listenForMessages();
 
-      const handler = vi.mocked(messaging.onMessage).mock.calls[0][0];
+      const handler = defined(vi.mocked(messaging.onMessage).mock.calls[0]?.[0]);
       handler({ type: "kotdiff-toggle", enabled: true });
 
       // run() was called — getEnabled should be called
@@ -207,7 +209,7 @@ describe("ContentScriptService", () => {
       );
       localService.listenForMessages();
 
-      const handler = vi.mocked(messaging.onMessage).mock.calls[0][0];
+      const handler = defined(vi.mocked(messaging.onMessage).mock.calls[0]?.[0]);
       handler({ type: "kotdiff-dashboard-changed" });
 
       expect(mockDom.reload).toHaveBeenCalledTimes(1);
@@ -223,7 +225,7 @@ describe("ContentScriptService", () => {
       );
       localService.listenForMessages();
 
-      const handler = vi.mocked(messaging.onMessage).mock.calls[0][0];
+      const handler = defined(vi.mocked(messaging.onMessage).mock.calls[0]?.[0]);
       handler({ type: "some-unknown-message" });
 
       expect(mockDom.reload).not.toHaveBeenCalled();

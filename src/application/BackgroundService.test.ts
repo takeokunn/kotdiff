@@ -1,4 +1,12 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
+
+vi.stubGlobal("chrome", {
+  contextMenus: {
+    ContextType: { ACTION: "action" },
+  },
+});
+
+import { defined } from "../test-utils";
 import { createBackgroundService } from "./BackgroundService";
 import type { BackgroundServiceInstance } from "./BackgroundService";
 import type { StoragePort } from "../infrastructure/chrome/ports/StoragePort";
@@ -123,7 +131,7 @@ describe("BackgroundService", () => {
       vi.mocked(storage.getEnabled).mockResolvedValue(true);
       service.init();
 
-      const handler = vi.mocked(action.onClicked).mock.calls[0][0];
+      const handler = defined(vi.mocked(action.onClicked).mock.calls[0]?.[0]);
       handler(42);
       // flush async work: the handler calls void handleActionClick which is async
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -137,7 +145,7 @@ describe("BackgroundService", () => {
       vi.mocked(storage.getEnabled).mockResolvedValue(false);
       service.init();
 
-      const handler = vi.mocked(action.onClicked).mock.calls[0][0];
+      const handler = defined(vi.mocked(action.onClicked).mock.calls[0]?.[0]);
       handler(1);
       await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -151,7 +159,7 @@ describe("BackgroundService", () => {
     test("updates dashboard enabled and sends message to tab", async () => {
       service.init();
 
-      const handler = vi.mocked(contextMenus.onClicked).mock.calls[0][0];
+      const handler = defined(vi.mocked(contextMenus.onClicked).mock.calls[0]?.[0]);
       handler({ menuItemId: "kotdiff-dashboard", checked: true }, 10);
       await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -162,7 +170,7 @@ describe("BackgroundService", () => {
     test("does not send to tab when tabId is undefined", async () => {
       service.init();
 
-      const handler = vi.mocked(contextMenus.onClicked).mock.calls[0][0];
+      const handler = defined(vi.mocked(contextMenus.onClicked).mock.calls[0]?.[0]);
       handler({ menuItemId: "kotdiff-dashboard", checked: false }, undefined);
       await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -173,7 +181,7 @@ describe("BackgroundService", () => {
     test("ignores unknown menuItemId", async () => {
       service.init();
 
-      const handler = vi.mocked(contextMenus.onClicked).mock.calls[0][0];
+      const handler = defined(vi.mocked(contextMenus.onClicked).mock.calls[0]?.[0]);
       handler({ menuItemId: "some-other-menu" }, 5);
       await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -186,7 +194,7 @@ describe("BackgroundService", () => {
       vi.mocked(messaging.getExtensionUrl).mockReturnValue("chrome-extension://id/dashboard.html");
       service.init();
 
-      const handler = vi.mocked(messaging.onMessage).mock.calls[0][0];
+      const handler = defined(vi.mocked(messaging.onMessage).mock.calls[0]?.[0]);
       handler({ type: "kotdiff-open-dashboard" });
       await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -197,7 +205,7 @@ describe("BackgroundService", () => {
     test("ignores unknown message types", async () => {
       service.init();
 
-      const handler = vi.mocked(messaging.onMessage).mock.calls[0][0];
+      const handler = defined(vi.mocked(messaging.onMessage).mock.calls[0]?.[0]);
       handler({ type: "unknown-message" });
       await new Promise((resolve) => setTimeout(resolve, 0));
 

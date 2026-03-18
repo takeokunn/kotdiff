@@ -2,7 +2,7 @@ export interface ContextMenuCreateProps {
   id: string;
   title: string;
   type?: "checkbox" | "normal" | "radio" | "separator";
-  contexts?: string[];
+  contexts?: ReadonlyArray<chrome.contextMenus.ContextType>;
   checked?: boolean;
 }
 

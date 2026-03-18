@@ -1,4 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
+
+import { defined } from "../../../test-utils";
 import { chromeActionAdapter } from "./ChromeActionAdapter";
 
 const mockSetBadgeText = vi.fn();
@@ -39,7 +41,7 @@ describe("ChromeActionAdapter", () => {
     chromeActionAdapter.onClicked(handler);
     expect(mockAddListener).toHaveBeenCalledOnce();
 
-    const registeredListener = mockAddListener.mock.calls[0][0];
+    const registeredListener = defined(mockAddListener.mock.calls[0]?.[0]);
     registeredListener({ id: 7 });
     expect(handler).toHaveBeenCalledWith(7);
   });
@@ -48,7 +50,7 @@ describe("ChromeActionAdapter", () => {
     const handler = vi.fn();
     chromeActionAdapter.onClicked(handler);
 
-    const registeredListener = mockAddListener.mock.calls[0][0];
+    const registeredListener = defined(mockAddListener.mock.calls[0]?.[0]);
     registeredListener({ id: undefined });
     expect(handler).not.toHaveBeenCalled();
   });

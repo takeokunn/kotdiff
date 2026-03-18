@@ -13,8 +13,8 @@ export const browserDomAdapter: DomReadyPort = {
     return Array.from(document.querySelectorAll<T>(selector));
   },
 
-  createElement<T extends HTMLElement>(tag: string): T {
-    return document.createElement(tag) as T;
+  createElement<const K extends keyof HTMLElementTagNameMap>(tag: K): HTMLElementTagNameMap[K] {
+    return document.createElement(tag);
   },
 
   waitForElement(selector: string, onFound: (el: Element) => void): void {

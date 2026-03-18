@@ -1,4 +1,6 @@
 import { describe, test, expect } from "vitest";
+
+import { defined } from "../../test-utils";
 import { createBannerElement, renderBannerLine, injectStyles } from "./BannerRenderer";
 import { KOTDIFF_MARKER_CLASS } from "./styles";
 
@@ -49,8 +51,8 @@ describe("renderBannerLine", () => {
     expect(inner).not.toBeNull();
     const spans = inner?.querySelectorAll("span");
     expect(spans?.length).toBe(2);
-    expect(spans?.[0].style.fontWeight).toBe("bold");
-    expect(spans?.[1].style.color).toBe("green");
+    expect(defined(spans?.[0]).style.fontWeight).toBe("bold");
+    expect(defined(spans?.[1]).style.color).toBe("green");
   });
 
   test("appends div to container", () => {

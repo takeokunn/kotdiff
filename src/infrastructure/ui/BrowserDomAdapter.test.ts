@@ -49,12 +49,12 @@ describe("browserDomAdapter", () => {
 
   describe("createElement", () => {
     test("creates an element with the given tag", () => {
-      const btn = browserDomAdapter.createElement<HTMLButtonElement>("button");
+      const btn = browserDomAdapter.createElement("button");
       expect(btn.tagName).toBe("BUTTON");
     });
 
     test("creates a div element", () => {
-      const div = browserDomAdapter.createElement<HTMLDivElement>("div");
+      const div = browserDomAdapter.createElement("div");
       expect(div.tagName).toBe("DIV");
     });
   });

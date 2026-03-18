@@ -3,13 +3,15 @@ import type { DashboardRow } from "../../types";
 import type { RawTableRow } from "./RawTableRow";
 import { SATURDAY_CLASS, SUNDAY_CLASS, PUBLIC_HOLIDAY_KEYWORD } from "./constants";
 import { getCellText } from "./KotDomHelpers";
+import { isKotDayType } from "../../types";
 
 export function parseRow(row: Element): RawTableRow {
   const dayCell = row.querySelector<HTMLTableCellElement>('td[data-ht-sort-index="WORK_DAY"]');
   const scheduleText = getCellText(row, "SCHEDULE");
+  const dayTypeRaw = getCellText(row, "WORK_DAY_TYPE");
   return {
     date: dayCell?.textContent?.trim() ?? "",
-    dayType: getCellText(row, "WORK_DAY_TYPE"),
+    dayType: isKotDayType(dayTypeRaw) ? dayTypeRaw : "平日",
     isSaturday: dayCell?.classList.contains(SATURDAY_CLASS) ?? false,
     isSunday: dayCell?.classList.contains(SUNDAY_CLASS) ?? false,
     allWorkMinuteText: (() => {

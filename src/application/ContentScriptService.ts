@@ -1,5 +1,6 @@
 import type { StoragePort } from "../infrastructure/chrome/ports/StoragePort";
 import type { MessagingPort } from "../infrastructure/chrome/ports/MessagingPort";
+import { isKotdiffMessage } from "./types";
 import { type RowInput, accumulateRows } from "../domain/aggregates/WorkMonth";
 import { buildBannerLines, type BannerData } from "./BannerInfo";
 import {
@@ -102,7 +103,7 @@ export function createContentScriptService(
           ipCumulativeDiffBase = displayCumulativeDiff;
           const now = nowAsDecimalHours();
           const estimated = calcEstimatedWorkTime(inProgressData, now);
-          inProgress = { estimatedWorkTime: estimated.workTime, isOnBreak: estimated.isOnBreak };
+          inProgress = { estimatedWorkTime: estimated.workTime, status: estimated.status };
 
           const workCell = getCell(row, "ALL_WORK_MINUTE");
           if (workCell) updateEstimatedWorkCell(workCell, estimated.workTime);
@@ -189,16 +190,15 @@ export function createContentScriptService(
 
   function listenForMessages(): void {
     messaging.onMessage((msg) => {
-      if (typeof msg !== "object" || msg === null || !("type" in msg)) return;
-      const message = msg as { type: string; enabled?: boolean };
-      if (message.type === "kotdiff-toggle") {
-        if (!message.enabled) {
+      if (!isKotdiffMessage(msg)) return;
+      if (msg.type === "kotdiff-toggle") {
+        if (!msg.enabled) {
           dom.reload();
         } else {
           void run();
         }
       }
-      if (message.type === "kotdiff-dashboard-changed") {
+      if (msg.type === "kotdiff-dashboard-changed") {
         dom.reload();
       }
     });

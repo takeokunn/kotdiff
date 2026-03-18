@@ -1,4 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
+
+import { defined } from "../../../test-utils";
 import { chromeMessagingAdapter } from "./ChromeMessagingAdapter";
 
 const mockAddListener = vi.fn();
@@ -24,7 +26,7 @@ describe("ChromeMessagingAdapter", () => {
     chromeMessagingAdapter.onMessage(handler);
     expect(mockAddListener).toHaveBeenCalledOnce();
 
-    const registeredListener = mockAddListener.mock.calls[0][0];
+    const registeredListener = defined(mockAddListener.mock.calls[0]?.[0]);
     const msg = { type: "kotdiff-toggle", enabled: true };
     registeredListener(msg, { id: "test-extension-id" });
     expect(handler).toHaveBeenCalledWith(msg);
@@ -34,7 +36,7 @@ describe("ChromeMessagingAdapter", () => {
     const handler = vi.fn();
     chromeMessagingAdapter.onMessage(handler);
 
-    const registeredListener = mockAddListener.mock.calls[0][0];
+    const registeredListener = defined(mockAddListener.mock.calls[0]?.[0]);
     const msg = { type: "kotdiff-toggle", enabled: true };
     registeredListener(msg, { id: "test-extension-id" });
     expect(handler).toHaveBeenCalledWith(msg);
@@ -44,7 +46,7 @@ describe("ChromeMessagingAdapter", () => {
     const handler = vi.fn();
     chromeMessagingAdapter.onMessage(handler);
 
-    const registeredListener = mockAddListener.mock.calls[0][0];
+    const registeredListener = defined(mockAddListener.mock.calls[0]?.[0]);
     const msg = { type: "kotdiff-toggle", enabled: true };
     registeredListener(msg, { id: "some-other-extension-id" });
     expect(handler).not.toHaveBeenCalled();

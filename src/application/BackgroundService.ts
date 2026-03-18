@@ -6,6 +6,7 @@ import type {
   ContextMenusPort,
   ContextMenuInfo,
 } from "../infrastructure/chrome/ports/ContextMenusPort";
+import { isKotdiffMessage } from "./types";
 
 const DASHBOARD_MENU_ID = "kotdiff-dashboard";
 
@@ -45,9 +46,8 @@ export function createBackgroundService(
   }
 
   async function handleMessage(msg: unknown): Promise<void> {
-    if (typeof msg !== "object" || msg === null || !("type" in msg)) return;
-    const message = msg as { type: string };
-    if (message.type === "kotdiff-open-dashboard") {
+    if (!isKotdiffMessage(msg)) return;
+    if (msg.type === "kotdiff-open-dashboard") {
       const url = messaging.getExtensionUrl("dashboard.html");
       await tabs.openTab(url);
     }
@@ -73,7 +73,7 @@ export function createBackgroundService(
         id: DASHBOARD_MENU_ID,
         title: "ダッシュボード",
         type: "checkbox",
-        contexts: ["action"],
+        contexts: [chrome.contextMenus.ContextType.ACTION],
         checked: dashboardEnabled,
       });
     },

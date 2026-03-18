@@ -1,4 +1,6 @@
 import { describe, expect, test } from "vitest";
+
+import { defined } from "../../test-utils";
 import {
   getCell,
   getCellValue,
@@ -153,8 +155,8 @@ describe("addColumnTooltips", () => {
     const table = makeTable(["日付", "勤務時間"], [["03/04", "8:00"]]);
     addColumnTooltips(table);
     const tds = table.querySelectorAll("tbody tr td");
-    expect(tds[0].getAttribute("data-kotdiff-tooltip")).toBe("日付");
-    expect(tds[1].getAttribute("data-kotdiff-tooltip")).toBe("勤務時間");
+    expect(defined(tds[0]).getAttribute("data-kotdiff-tooltip")).toBe("日付");
+    expect(defined(tds[1]).getAttribute("data-kotdiff-tooltip")).toBe("勤務時間");
   });
 
   test("does nothing when thead or tbody is missing", () => {
@@ -166,8 +168,8 @@ describe("addColumnTooltips", () => {
     const table = makeTable(["日付", ""], [["03/04", "8:00"]]);
     addColumnTooltips(table);
     const tds = table.querySelectorAll("tbody tr td");
-    expect(tds[0].getAttribute("data-kotdiff-tooltip")).toBe("日付");
-    expect(tds[1].getAttribute("data-kotdiff-tooltip")).toBeNull();
+    expect(defined(tds[0]).getAttribute("data-kotdiff-tooltip")).toBe("日付");
+    expect(defined(tds[1]).getAttribute("data-kotdiff-tooltip")).toBeNull();
   });
 });
 

@@ -21,7 +21,7 @@ describe("ChromeTabsAdapter", () => {
 
   test("sendToTab calls chrome.tabs.sendMessage with tabId and message", async () => {
     mockSendMessage.mockResolvedValue(undefined);
-    const message = { type: "kotdiff-toggle", enabled: true };
+    const message = { type: "kotdiff-toggle", enabled: true } as const;
     await chromeTabsAdapter.sendToTab(42, message);
     expect(mockSendMessage).toHaveBeenCalledWith(42, message);
   });

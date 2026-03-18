@@ -1,4 +1,4 @@
-import { parseWorkTime } from "../../domain/value-objects/TimeRecord";
+import { parseWorkTime, asDecimalHours } from "../../domain/value-objects/TimeRecord";
 import { parseAllTimeRecords, extractTimeStrings } from "../../domain/services/WorkTimeParser";
 import { calcNightWork } from "../../domain/services/NightWorkCalculator";
 import type { WorkDay } from "../../domain/entities/WorkDay";
@@ -37,8 +37,12 @@ export function rawRowToWorkDay(raw: RawTableRow): WorkDay {
   let nightOvertime: number | null = null;
   if (startTimeStrings[0] && endTimeStrings[0]) {
     if (startNums.length > 0 && endNums.length > 0) {
-      const nw = calcNightWork(startNums[0], endNums[0], breakStartNums, breakEndNums);
-      nightOvertime = nw > 0 ? nw : null;
+      const s = startNums[0];
+      const e = endNums[0];
+      if (s !== undefined && e !== undefined) {
+        const nw = calcNightWork(s, e, breakStartNums, breakEndNums);
+        nightOvertime = nw > 0 ? nw : null;
+      }
     }
   }
 

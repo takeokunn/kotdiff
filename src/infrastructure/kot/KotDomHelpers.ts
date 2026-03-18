@@ -1,13 +1,14 @@
-import { parseWorkTime } from "../../domain/value-objects/TimeRecord";
+import { parseWorkTime, asDecimalHours } from "../../domain/value-objects/TimeRecord";
 import { parseAllTimeRecords } from "../../domain/services/WorkTimeParser";
 import type { InProgressRowData } from "../../domain/value-objects/InProgressWork";
 import { SATURDAY_CLASS, SUNDAY_CLASS, PUBLIC_HOLIDAY_KEYWORD } from "./constants";
+import type { KotSortIndex } from "./types";
 
-export function getCell(row: Element, sortIndex: string): HTMLTableCellElement | null {
+export function getCell(row: Element, sortIndex: KotSortIndex): HTMLTableCellElement | null {
   return row.querySelector<HTMLTableCellElement>(`td[data-ht-sort-index="${sortIndex}"]`);
 }
 
-export function getCellValue(row: Element, sortIndex: string): number | null {
+export function getCellValue(row: Element, sortIndex: KotSortIndex): number | null {
   const cell = getCell(row, sortIndex);
   if (!cell) return null;
   const p = cell.querySelector("p");
@@ -21,7 +22,7 @@ function isWeekday(row: Element): boolean {
 }
 
 // Returns raw trimmed text content of a cell; use getCellValue for numeric work-time parsing
-export function getCellText(row: Element, sortIndex: string): string {
+export function getCellText(row: Element, sortIndex: KotSortIndex): string {
   const cell = getCell(row, sortIndex);
   if (!cell) return "";
   return cell.textContent?.trim() ?? "";
@@ -45,7 +46,9 @@ export function addColumnTooltips(table: HTMLTableElement): void {
   for (const row of tbody.querySelectorAll("tr")) {
     const tds = row.querySelectorAll("td");
     for (let i = 0; i < tds.length && i < names.length; i++) {
-      if (names[i]) tds[i].setAttribute("data-kotdiff-tooltip", names[i]);
+      const name = names[i];
+      const td = tds[i];
+      if (name && td) td.setAttribute("data-kotdiff-tooltip", name);
     }
   }
 }
@@ -54,7 +57,9 @@ export function detectInProgressRow(row: Element): InProgressRowData | null {
   const startText = getCellText(row, "START_TIMERECORD");
   const startTimes = parseAllTimeRecords(startText);
   if (startTimes.length === 0) return null;
-  const startTime = startTimes[0];
+  const startTimeRaw = startTimes[0];
+  if (startTimeRaw === undefined) return null;
+  const startTime = asDecimalHours(startTimeRaw);
 
   const endText = getCellText(row, "END_TIMERECORD");
   if (parseAllTimeRecords(endText).length > 0) return null;
