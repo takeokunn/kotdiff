@@ -7,7 +7,7 @@ import {
 } from "./ContentScriptService";
 import type { StoragePort } from "../infrastructure/chrome/ports/StoragePort";
 import type { MessagingPort } from "../infrastructure/chrome/ports/MessagingPort";
-import type { TimerPort } from "../infrastructure/ui/TimerPort";
+import type { TimerPort } from "../infrastructure/ui/ports/TimerPort";
 import type { DomReadyPort } from "../infrastructure/ui/ports/DomReadyPort";
 
 function createMockTimer(): TimerPort {

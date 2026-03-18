@@ -38,7 +38,7 @@ beforeEach(() => {
 
 describe("App", () => {
   test("renders loading/no-data state when chrome storage returns nothing", async () => {
-    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockImplementation(
+    vi.mocked(chrome.storage.local.get).mockImplementation(
       (_key: string, callback: (result: Record<string, unknown>) => void) => {
         callback({});
       },
@@ -54,7 +54,7 @@ describe("App", () => {
   });
 
   test("renders dashboard heading when data is available", async () => {
-    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockImplementation(
+    vi.mocked(chrome.storage.local.get).mockImplementation(
       (_key: string, callback: (result: Record<string, unknown>) => void) => {
         callback({ kotdiff_dashboard_data: mockDashboardData });
       },
@@ -68,7 +68,7 @@ describe("App", () => {
   });
 
   test("renders generatedAt timestamp when data is available", async () => {
-    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockImplementation(
+    vi.mocked(chrome.storage.local.get).mockImplementation(
       (_key: string, callback: (result: Record<string, unknown>) => void) => {
         callback({ kotdiff_dashboard_data: mockDashboardData });
       },
@@ -84,7 +84,7 @@ describe("App", () => {
   });
 
   test("renders summary cards section when data is available", async () => {
-    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockImplementation(
+    vi.mocked(chrome.storage.local.get).mockImplementation(
       (_key: string, callback: (result: Record<string, unknown>) => void) => {
         callback({ kotdiff_dashboard_data: mockDashboardData });
       },

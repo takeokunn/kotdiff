@@ -1,4 +1,4 @@
-import type { TimerPort } from "./TimerPort";
+import type { TimerPort } from "./ports/TimerPort";
 
 export const browserTimerAdapter: TimerPort = {
   setInterval(callback: () => void, ms: number): () => void {

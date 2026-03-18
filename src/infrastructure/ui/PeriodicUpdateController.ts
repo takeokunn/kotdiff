@@ -1,4 +1,4 @@
-import type { TimerPort } from "./TimerPort";
+import type { TimerPort } from "./ports/TimerPort";
 import { calcEstimatedWorkTime } from "../../domain/value-objects/InProgressWork";
 import { detectInProgressRow, getCell } from "../kot/KotDomHelpers";
 import { nowAsDecimalHours } from "../../domain/value-objects/TimeRecord";

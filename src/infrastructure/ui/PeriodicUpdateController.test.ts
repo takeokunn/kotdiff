@@ -1,6 +1,6 @@
 import { describe, test, expect, vi, afterEach } from "vitest";
 import { createPeriodicUpdateController } from "./PeriodicUpdateController";
-import type { TimerPort } from "./TimerPort";
+import type { TimerPort } from "./ports/TimerPort";
 
 // Create a mock TimerPort
 function createMockTimerPort(): TimerPort & {
@@ -48,11 +48,11 @@ describe("PeriodicUpdateController", () => {
     const mockPort = createMockTimerPort();
     const stopTimerSpy = vi.fn();
     const stopObserverSpy = vi.fn();
-    vi.spyOn(mockPort, "setInterval").mockImplementation(() => {
-      return stopTimerSpy;
-    });
+    let capturedRemoval: (() => void) | undefined;
+
+    vi.spyOn(mockPort, "setInterval").mockImplementation(() => stopTimerSpy);
     vi.spyOn(mockPort, "observeRemoval").mockImplementation((_el, onRemoved) => {
-      (mockPort as unknown as Record<string, unknown>)["_storedRemoval"] = onRemoved;
+      capturedRemoval = onRemoved;
       return stopObserverSpy;
     });
 
@@ -62,7 +62,7 @@ describe("PeriodicUpdateController", () => {
     controller.start(row, diffCell, 0);
 
     // Trigger removal callback — should call both stop functions
-    (mockPort as { _storedRemoval?: () => void })._storedRemoval?.();
+    capturedRemoval?.();
 
     expect(stopTimerSpy).toHaveBeenCalledTimes(1);
     expect(stopObserverSpy).toHaveBeenCalledTimes(1);

@@ -28,7 +28,7 @@ import {
   injectStyles,
 } from "../infrastructure/ui/BannerRenderer";
 import { createPeriodicUpdateController } from "../infrastructure/ui/PeriodicUpdateController";
-import type { TimerPort } from "../infrastructure/ui/TimerPort";
+import type { TimerPort } from "../infrastructure/ui/ports/TimerPort";
 import { browserTimerAdapter } from "../infrastructure/ui/BrowserTimerAdapter";
 import type { DomReadyPort } from "../infrastructure/ui/ports/DomReadyPort";
 import { browserDomAdapter } from "../infrastructure/ui/BrowserDomAdapter";
