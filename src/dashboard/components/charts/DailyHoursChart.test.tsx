@@ -2,27 +2,7 @@ import { describe, test, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { DailyHoursChart } from "./DailyHoursChart";
 import type { DailyRowSummary } from "../../../domain/aggregates/WorkMonth";
-
-function makeRow(overrides: Partial<DailyRowSummary> = {}): DailyRowSummary {
-  return {
-    date: "03/01（月）",
-    dayType: "weekday",
-    isWeekend: false,
-    actual: 8,
-    expected: 8,
-    diff: 0,
-    cumulativeDiff: 0,
-    overtime: 0,
-    breakTime: 1,
-    startTime: "09:00",
-    endTime: "18:00",
-    breakStarts: [],
-    breakEnds: [],
-    schedule: null,
-    nightOvertime: null,
-    ...overrides,
-  };
-}
+import { makeWorkedRow, makeUnworkedRow, makeRow } from "../../test-helpers";
 
 describe("DailyHoursChart", () => {
   test("shows no-data message when rows is empty", () => {
@@ -31,7 +11,7 @@ describe("DailyHoursChart", () => {
   });
 
   test("shows no-data message when all rows are weekend or have null actual", () => {
-    const rows = [makeRow({ actual: null }), makeRow({ isWeekend: true })];
+    const rows: DailyRowSummary[] = [makeUnworkedRow(), makeWorkedRow({ isWeekend: true })];
     render(<DailyHoursChart rows={rows} />);
     expect(screen.getByText("データがありません")).toBeInTheDocument();
   });

@@ -8,7 +8,7 @@ import { TimelineBar } from "./TimelineBar";
 import { BreakTooltip } from "./BreakTooltip";
 
 interface DailyTableProps {
-  rows: DailyRowSummary[];
+  rows: readonly DailyRowSummary[];
 }
 
 export function DailyTable({ rows }: DailyTableProps) {

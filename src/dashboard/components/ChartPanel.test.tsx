@@ -2,13 +2,13 @@ import { describe, test, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChartPanel } from "./ChartPanel";
-import type { DashboardSummary } from "../../domain/aggregates/WorkMonth";
-import type { DailyRowSummary } from "../../domain/aggregates/WorkMonth";
+import type { DashboardSummary, WorkedDailyRow } from "../../domain/aggregates/WorkMonth";
 
-function makeRow(overrides: Partial<DailyRowSummary> = {}): DailyRowSummary {
+function makeRow(overrides: Partial<WorkedDailyRow> = {}): WorkedDailyRow {
   return {
+    type: "worked",
     date: "03/01（月）",
-    dayType: "weekday",
+    dayType: "平日",
     isWeekend: false,
     actual: 8,
     expected: 8,

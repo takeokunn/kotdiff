@@ -3,8 +3,8 @@ import { formatHM } from "../../domain/value-objects/WorkDuration";
 
 interface BreakTooltipProps {
   breakTime: number | null;
-  breakStarts: string[];
-  breakEnds: string[];
+  breakStarts: readonly string[];
+  breakEnds: readonly string[];
 }
 
 export function BreakTooltip({ breakTime, breakStarts, breakEnds }: BreakTooltipProps) {
