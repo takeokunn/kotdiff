@@ -1,12 +1,8 @@
 import { rawRowToWorkDay, workDayToDashboardRow } from "./WorkDayMapper";
 import type { DashboardRow } from "../../types";
 import type { RawTableRow } from "./RawTableRow";
-import {
-  SATURDAY_CLASS,
-  SUNDAY_CLASS,
-  PUBLIC_HOLIDAY_KEYWORD,
-  UNCOMPLETE_CLASS,
-} from "./constants";
+import { SATURDAY_CLASS, SUNDAY_CLASS, UNCOMPLETE_CLASS } from "./constants";
+import { PUBLIC_HOLIDAY_KEYWORD } from "../../domain/constants";
 import { getCellText } from "./KotDomHelpers";
 import { isKotDayType } from "../../types";
 

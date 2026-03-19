@@ -33,12 +33,12 @@ export function TimelineBar({ segments }: TimelineBarProps) {
           />
         ))}
       </div>
-      {segments.map((seg) => {
+      {segments.map((seg, i) => {
         const left = toPercent(seg.startHour);
         const width = toPercent(seg.endHour) - left;
         return (
           <div
-            key={`${seg.type}-${seg.startHour}-${seg.endHour}`}
+            key={i}
             className={`group absolute top-0 h-full rounded ${seg.type === "work" ? "bg-blue-400" : "bg-amber-200"}`}
             style={{
               left: `${left}%`,

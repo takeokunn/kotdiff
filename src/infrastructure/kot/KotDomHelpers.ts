@@ -1,12 +1,8 @@
 import { parseWorkTime, asDecimalHours } from "../../domain/value-objects/TimeRecord";
 import { parseAllTimeRecords } from "../../domain/services/WorkTimeParser";
 import type { InProgressRowData } from "../../domain/value-objects/InProgressWork";
-import {
-  SATURDAY_CLASS,
-  SUNDAY_CLASS,
-  PUBLIC_HOLIDAY_KEYWORD,
-  UNCOMPLETE_CLASS,
-} from "./constants";
+import { SATURDAY_CLASS, SUNDAY_CLASS, UNCOMPLETE_CLASS } from "./constants";
+import { PUBLIC_HOLIDAY_KEYWORD } from "../../domain/constants";
 import type { KotSortIndex } from "./types";
 
 export function getCell(row: Element, sortIndex: KotSortIndex): HTMLTableCellElement | null {

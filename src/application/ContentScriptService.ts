@@ -160,7 +160,7 @@ export function createContentScriptService(
     const workDays = rawRows.map(rawRowToWorkDay);
     const leaveBalances = scrapeLeaveBalances(document);
     const dashboardData = toStorageData(workDays, leaveBalances, new Date().toISOString());
-    void storage.setDashboardData(dashboardData);
+    storage.setDashboardData(dashboardData).catch(console.error);
 
     // Dashboard button
     injectDashboardButton(table, storage, messaging);

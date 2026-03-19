@@ -60,8 +60,8 @@ function BreakTooltipWithPairs({ breakTime, pairs }: { breakTime: number; pairs:
           visibility: visible ? "visible" : "hidden",
         }}
       >
-        {pairs.map((pair) => (
-          <span key={pair} className="block">
+        {pairs.map((pair, i) => (
+          <span key={i} className="block">
             {pair}
           </span>
         ))}

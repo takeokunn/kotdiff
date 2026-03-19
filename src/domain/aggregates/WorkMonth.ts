@@ -3,7 +3,7 @@ import type { DecimalHours } from "../value-objects/TimeRecord";
 import type { DashboardData } from "../../types";
 import type { WorkDay } from "../entities/WorkDay";
 import type { KotDayType } from "../../types";
-import { DEFAULT_EXPECTED_HOURS } from "../constants";
+import { DEFAULT_EXPECTED_HOURS, PUBLIC_HOLIDAY_KEYWORD } from "../constants";
 
 export interface RowInput {
   readonly actual: number | null;
@@ -153,7 +153,7 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
       totalNightOvertime += row.nightOvertime;
     }
 
-    const isPublicHoliday = row.schedule?.includes("公休") ?? false;
+    const isPublicHoliday = row.schedule?.includes(PUBLIC_HOLIDAY_KEYWORD) ?? false;
     if (row.actual !== null && diff !== null && cumDiff !== null) {
       dailyRows.push({
         type: "worked",
