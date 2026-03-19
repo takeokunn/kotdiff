@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import type { DailyRowSummary } from "../../../domain/aggregates/WorkMonth";
 import { parseTimeRecord } from "../../../domain/value-objects/TimeRecord";
 import { linearScale } from "../../lib/svg";
-import { extractWeekday } from "../../lib/chart-calculations";
 
 interface WorkRangeChartProps {
   rows: readonly DailyRowSummary[];
@@ -28,7 +27,7 @@ type TooltipState = { cx: number; cy: number; date: string; start: number; end: 
 export function WorkRangeChart({ rows }: WorkRangeChartProps) {
   const [tooltip, setTooltip] = useState<TooltipState>(null);
 
-  const { items, yScale, timeLabels, barWidth, gap, weekdayAvgRange } = useMemo(() => {
+  const { items, yScale, timeLabels, barWidth, gap } = useMemo(() => {
     const items = rows
       .filter((r) => r.type === "worked" && r.startTime !== null && r.endTime !== null)
       .flatMap((r, i) => {
@@ -60,7 +59,6 @@ export function WorkRangeChart({ rows }: WorkRangeChartProps) {
         timeLabels: [],
         barWidth: 20,
         gap: 0,
-        weekdayAvgRange: new Map<string, { avgStart: number; avgEnd: number }>(),
       };
     }
 
@@ -78,27 +76,6 @@ export function WorkRangeChart({ rows }: WorkRangeChartProps) {
 
     const yScale = linearScale([TIME_MIN, TIME_MAX], [PAD.top, H - PAD.bottom]);
 
-    // Compute weekday average start/end times for reference lines
-    const weekdayBuckets = new Map<string, { starts: number[]; ends: number[] }>();
-    for (const item of items) {
-      const wd = extractWeekday(item.date);
-      if (wd === null) continue;
-      const bucket = weekdayBuckets.get(wd);
-      if (bucket !== undefined) {
-        bucket.starts.push(item.start);
-        bucket.ends.push(item.end);
-      } else {
-        weekdayBuckets.set(wd, { starts: [item.start], ends: [item.end] });
-      }
-    }
-    const weekdayAvgRange = new Map<string, { avgStart: number; avgEnd: number }>();
-    for (const [wd, { starts, ends }] of weekdayBuckets) {
-      if (starts.length === 0) continue;
-      const avgStart = starts.reduce((a, b) => a + b, 0) / starts.length;
-      const avgEnd = ends.reduce((a, b) => a + b, 0) / ends.length;
-      weekdayAvgRange.set(wd, { avgStart, avgEnd });
-    }
-
     // Generate hourly labels every 3h within bounds
     const timeLabels: number[] = [];
     const labelStep = TIME_MAX - TIME_MIN > 18 ? 6 : 3;
@@ -106,7 +83,7 @@ export function WorkRangeChart({ rows }: WorkRangeChartProps) {
       timeLabels.push(h);
     }
 
-    return { items, yScale, timeLabels, barWidth, gap, weekdayAvgRange };
+    return { items, yScale, timeLabels, barWidth, gap };
   }, [rows]);
 
   if (items.length === 0) {
@@ -179,9 +156,6 @@ export function WorkRangeChart({ rows }: WorkRangeChartProps) {
         const cx = Math.min(Math.max(x + barWidth / 2, 50), W - 50);
         const cy = y1 < 60 ? y2 + 48 : y1 - 8;
 
-        const wd = extractWeekday(item.date);
-        const avgRange = wd !== null ? weekdayAvgRange.get(wd) : undefined;
-
         return (
           <g key={item.index}>
             {/* Full range background */}
@@ -201,31 +175,6 @@ export function WorkRangeChart({ rows }: WorkRangeChartProps) {
                 style={{ "--bar-delay": `${item.index * 0.03}s` }}
               />
             ))}
-            {/* Weekday average reference lines */}
-            {avgRange !== undefined && (
-              <>
-                <line
-                  x1={x - 2}
-                  y1={yScale(avgRange.avgStart)}
-                  x2={x + barWidth + 2}
-                  y2={yScale(avgRange.avgStart)}
-                  stroke="#6b7280"
-                  strokeWidth={1.5}
-                  strokeOpacity={0.6}
-                  pointerEvents="none"
-                />
-                <line
-                  x1={x - 2}
-                  y1={yScale(avgRange.avgEnd)}
-                  x2={x + barWidth + 2}
-                  y2={yScale(avgRange.avgEnd)}
-                  stroke="#6b7280"
-                  strokeWidth={1.5}
-                  strokeOpacity={0.6}
-                  pointerEvents="none"
-                />
-              </>
-            )}
             {/* Tooltip hit area */}
             <rect
               x={x}

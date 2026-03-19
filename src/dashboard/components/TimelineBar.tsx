@@ -9,18 +9,15 @@ export function TimelineBar({ segments }: TimelineBarProps) {
     return <div className="h-5 min-w-[200px]" />;
   }
 
-  const allHours = segments.flatMap((s) => [s.startHour, s.endHour]);
-  const scaleMin = Math.floor(Math.min(...allHours));
-  const scaleMax = Math.ceil(Math.max(...allHours));
-  const span = scaleMax - scaleMin;
-  if (span === 0) return <div className="h-5 min-w-[200px]" />;
+  const scaleMin = 5;
+  const scaleMax = 29;
+  const span = scaleMax - scaleMin; // 24
 
   const toPercent = (h: number) => ((h - scaleMin) / span) * 100;
 
-  // Guide lines: 3h step for spans ≤18h, 6h step otherwise
-  const step = span > 18 ? 6 : 3;
+  // Guide lines: 6h step over fixed [5, 29] range → 6, 12, 18, 24
   const guideHours: number[] = [];
-  for (let h = Math.ceil(scaleMin / step) * step; h < scaleMax; h += step) {
+  for (let h = 6; h < scaleMax; h += 6) {
     guideHours.push(h);
   }
 
@@ -48,7 +45,7 @@ export function TimelineBar({ segments }: TimelineBarProps) {
               width: `${width}%`,
             }}
           >
-            <span className="invisible absolute bottom-full left-1/2 -translate-x-1/2 mb-1 rounded bg-gray-800 px-2 py-1 text-xs text-white whitespace-nowrap group-hover:visible z-10 pointer-events-none">
+            <span className="invisible absolute bottom-full left-1/2 -translate-x-1/2 mb-1 rounded bg-gray-800 px-2 py-1 text-xs text-white whitespace-nowrap group-hover:visible z-50 pointer-events-none">
               {seg.type === "work" ? "稼働" : "休憩"}: {seg.startLabel} 〜 {seg.endLabel}（
               {seg.durationLabel}）
             </span>

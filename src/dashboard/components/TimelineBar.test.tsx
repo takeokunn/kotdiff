@@ -13,7 +13,7 @@ describe("TimelineBar", () => {
     expect(container.querySelectorAll(".bg-gray-300").length).toBe(0);
   });
 
-  test("全セグメントが同一時刻 (span=0) → 空コンテナを返す", () => {
+  test("startHour === endHour のセグメントは幅ゼロで描画される", () => {
     const segments: TimelineSegment[] = [
       {
         type: "work",
@@ -25,14 +25,13 @@ describe("TimelineBar", () => {
       },
     ];
     const { container } = render(<TimelineBar segments={segments} />);
-    const div = container.firstElementChild as HTMLElement;
-    expect(div).toBeTruthy();
-    expect(div.querySelector("[class*='bg-blue']")).toBeNull();
+    const workDiv = container.querySelector(".bg-blue-400") as HTMLElement;
+    expect(workDiv).toBeInTheDocument();
+    expect(workDiv.style.width).toBe("0%");
   });
 
   test("renders guide hour markers when segments are present", () => {
-    // 9:00-18:00 → scaleMin=9, scaleMax=18, span=9 (≤18), step=3
-    // guide hours: 12, 15 → 2 markers (9 and 18 are excluded as boundaries)
+    // Fixed range [5, 29], step=6 → guide hours: 6, 12, 18, 24 → 4 markers
     const segments: TimelineSegment[] = [
       {
         type: "work",
@@ -45,8 +44,7 @@ describe("TimelineBar", () => {
     ];
     const { container } = render(<TimelineBar segments={segments} />);
     const guideLines = container.querySelectorAll(".bg-gray-300");
-    // step=3, guides from ceil(9/3)*3=9 (excluded <18): 9,12,15 → 3 markers
-    expect(guideLines.length).toBe(3);
+    expect(guideLines.length).toBe(4);
   });
 
   test("renders work segment with blue background", () => {
@@ -114,8 +112,8 @@ describe("TimelineBar", () => {
   });
 
   test("segment has correct left and width styles", () => {
-    // single segment 9:00-18:00 → scaleMin=9, scaleMax=18, span=9
-    // left = (9-9)/9*100 = 0%, width = (18-9)/9*100 = 100%
+    // Fixed range [5, 29], span=24
+    // 9:00-18:00 → left = (9-5)/24*100 ≈ 16.67%, width = (18-9)/24*100 = 37.5%
     const segments: TimelineSegment[] = [
       {
         type: "work",
@@ -128,7 +126,7 @@ describe("TimelineBar", () => {
     ];
     const { container } = render(<TimelineBar segments={segments} />);
     const workDiv = container.querySelector(".bg-blue-400") as HTMLElement;
-    expect(workDiv.style.left).toBe("0%");
-    expect(workDiv.style.width).toBe("100%");
+    expect(workDiv.style.left).toBe("16.666666666666664%");
+    expect(workDiv.style.width).toBe("37.5%");
   });
 });
