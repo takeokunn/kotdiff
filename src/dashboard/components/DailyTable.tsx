@@ -30,7 +30,6 @@ export function DailyTable({ rows }: DailyTableProps) {
         </TableHeader>
         <TableBody>
           {rows
-            .filter((row) => !row.isPublicHoliday)
             .map((row) => {
               const segments = buildTimelineSegments(
                 row.startTime,
@@ -43,7 +42,13 @@ export function DailyTable({ rows }: DailyTableProps) {
               return (
                 <TableRow
                   key={row.date}
-                  className={row.isWeekend ? "bg-blue-50/40 text-gray-400" : ""}
+                  className={
+                    row.isPublicHoliday
+                      ? "bg-purple-50/40 text-gray-400"
+                      : row.isWeekend
+                        ? "bg-blue-50/40 text-gray-400"
+                        : ""
+                  }
                 >
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-1.5">
@@ -59,7 +64,8 @@ export function DailyTable({ rows }: DailyTableProps) {
                   <TableCell>
                     {row.actual !== null ? (
                       formatHM(row.actual)
-                    ) : row.isWeekend || row.expected === 0 ? (
+                    ) : // 公休日は "OFF" を表示しない
+                    !row.isPublicHoliday && (row.isWeekend || row.expected === 0) ? (
                       <span className="italic text-gray-300">OFF</span>
                     ) : (
                       "-"
