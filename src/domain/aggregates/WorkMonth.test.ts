@@ -289,6 +289,17 @@ describe("buildDashboardSummary", () => {
     const summary = buildDashboardSummary(makeData([], leaves));
     expect(summary.leaveBalances).toEqual(leaves);
   });
+
+  test("isPublicHoliday is true when schedule contains 公休", () => {
+    const summary = buildDashboardSummary(
+      makeData([
+        makeDashboardRow({ date: "03/01", schedule: "複数回休憩(公休)", working: false }),
+        makeDashboardRow({ date: "03/02", actual: 8, fixedWork: 8 }),
+      ]),
+    );
+    expect(defined(summary.dailyRows[0]).isPublicHoliday).toBe(true);
+    expect(defined(summary.dailyRows[1]).isPublicHoliday).toBe(false);
+  });
 });
 
 function makeWorkDay(overrides: Partial<WorkDay> = {}): WorkDay {
@@ -414,5 +425,15 @@ describe("buildWorkMonthSummary", () => {
     expect(summary.projectedTotal).toBe(0);
     expect(summary.progressPercent).toBe(0);
     expect(summary.avgWorkTime).toBe(0);
+  });
+
+  test("isPublicHoliday is true when schedule contains 公休", () => {
+    const days: WorkDay[] = [
+      makeWorkDay({ date: "03/01", schedule: "複数回休憩(公休)", working: false }),
+      makeWorkDay({ date: "03/02", actual: 8, fixedWork: 8 }),
+    ];
+    const summary = buildWorkMonthSummary(days, []);
+    expect(defined(summary.dailyRows[0]).isPublicHoliday).toBe(true);
+    expect(defined(summary.dailyRows[1]).isPublicHoliday).toBe(false);
   });
 });
