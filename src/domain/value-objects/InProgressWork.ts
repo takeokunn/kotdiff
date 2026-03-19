@@ -11,7 +11,10 @@ export type EstimatedWorkTime =
   | { readonly status: "working"; readonly workTime: DecimalHours }
   | { readonly status: "onBreak"; readonly workTime: DecimalHours };
 
-export function calcEstimatedWorkTime(data: InProgressRowData, now: DecimalHours): EstimatedWorkTime {
+export function calcEstimatedWorkTime(
+  data: InProgressRowData,
+  now: DecimalHours,
+): EstimatedWorkTime {
   // 日跨ぎ対応: now が startTime より小さい場合は翌日とみなす
   let nowHours: number = now;
   if (nowHours < data.startTime) {

@@ -24,5 +24,7 @@ export function parseTimeRecord(text: string): number | null {
 export function nowAsDecimalHours(date: Date = new Date()): DecimalHours {
   const jstMs = date.getTime() + 9 * 60 * 60 * 1000;
   const jstDate = new Date(jstMs);
-  return asDecimalHours(jstDate.getUTCHours() + jstDate.getUTCMinutes() / 60 + jstDate.getUTCSeconds() / 3600);
+  return asDecimalHours(
+    jstDate.getUTCHours() + jstDate.getUTCMinutes() / 60 + jstDate.getUTCSeconds() / 3600,
+  );
 }

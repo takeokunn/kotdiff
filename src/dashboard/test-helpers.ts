@@ -1,4 +1,8 @@
-import type { WorkedDailyRow, UnworkedDailyRow, DailyRowSummary } from "../domain/aggregates/WorkMonth";
+import type {
+  WorkedDailyRow,
+  UnworkedDailyRow,
+  DailyRowSummary,
+} from "../domain/aggregates/WorkMonth";
 
 export function makeWorkedRow(overrides: Partial<WorkedDailyRow> = {}): WorkedDailyRow {
   return {

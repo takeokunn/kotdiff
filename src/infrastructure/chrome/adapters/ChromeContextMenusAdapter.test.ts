@@ -43,9 +43,6 @@ describe("ChromeContextMenusAdapter", () => {
     expect(mockCreate).toHaveBeenCalledWith({
       id: "menu-1",
       title: "Menu Item",
-      type: undefined,
-      contexts: undefined,
-      checked: undefined,
     });
   });
 

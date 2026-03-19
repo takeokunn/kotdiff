@@ -22,7 +22,11 @@ function createMockDom(): DomReadyPort {
     isAlreadyInjected: vi.fn().mockReturnValue(false),
     querySelector: vi.fn().mockReturnValue(null),
     querySelectorAll: vi.fn().mockReturnValue([]),
-    createElement: vi.fn().mockImplementation(<const K extends keyof HTMLElementTagNameMap>(tag: K) => document.createElement(tag)),
+    createElement: vi
+      .fn()
+      .mockImplementation(<const K extends keyof HTMLElementTagNameMap>(tag: K) =>
+        document.createElement(tag),
+      ),
     waitForElement: vi.fn(),
     reload: vi.fn(),
   };
@@ -66,9 +70,9 @@ function createKotTable(): HTMLTableElement {
     ["WORK_DAY", "03/04"],
     ["WORK_DAY_TYPE", "平日"],
     ["SCHEDULE", ""],
-    ["FIXED_WORK_MINUTE", "480"],
-    ["ALL_WORK_MINUTE", "480"],
-    ["REST_MINUTE", "60"],
+    ["FIXED_WORK_MINUTE", "8.00"],
+    ["ALL_WORK_MINUTE", "8.00"],
+    ["REST_MINUTE", "1.00"],
     ["START_TIMERECORD", "09:00"],
     ["END_TIMERECORD", "18:00"],
     ["REST_START_TIMERECORD", ""],
@@ -157,7 +161,12 @@ describe("ContentScriptService", () => {
       const mockDom = createMockDom();
       vi.mocked(storage.getEnabled).mockResolvedValue(true);
       vi.mocked(storage.getDashboardEnabled).mockResolvedValue(false);
-      const localService = createContentScriptService(storage, messaging, createMockTimer(), mockDom);
+      const localService = createContentScriptService(
+        storage,
+        messaging,
+        createMockTimer(),
+        mockDom,
+      );
 
       await Promise.all([localService.run(), localService.run()]);
 
@@ -263,6 +272,8 @@ describe("ContentScriptService", () => {
       expect(tbodyRow).not.toBeNull();
       const extraTd = tbodyRow?.querySelector("td.kotdiff-injected");
       expect(extraTd).not.toBeNull();
+      // 8h actual - 8h expected = 0 diff → "+0:00"
+      expect(extraTd?.textContent).toBe("+0:00");
 
       // Clean up
       wrapper.remove();

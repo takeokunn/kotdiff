@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { buildDashboardSummary, type DashboardSummary } from "../domain/aggregates/WorkMonth";
-import { isDashboardData, type DashboardData } from "../types";
+import { isDashboardData } from "../types";
 import { DASHBOARD_DATA_KEY } from "../infrastructure/chrome/constants";
 import { SummaryCards } from "./components/SummaryCards";
 import { ChartPanel } from "./components/ChartPanel";
 import { DailyTable } from "./components/DailyTable";
-
 
 export function App() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);

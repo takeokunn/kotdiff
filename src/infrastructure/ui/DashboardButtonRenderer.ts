@@ -16,7 +16,8 @@ export function createDashboardButton(
   btn.style.cssText =
     "margin-top: 8px; padding: 4px 12px; border: 1px solid #7986cb; border-radius: 4px; background: #fff; color: #333; cursor: pointer; font-size: 13px;";
   btn.addEventListener("click", async () => {
-    const tbody = table.querySelector("tbody")!;
+    const tbody = table.querySelector("tbody");
+    if (!tbody) return;
     const rawRows = parseKotTable(tbody);
     const workDays = rawRows.map(rawRowToWorkDay);
     const leaveBalances = scrapeLeaveBalances(document);

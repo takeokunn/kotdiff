@@ -9,7 +9,10 @@ export interface RowInput {
   readonly actual: number | null;
   readonly fixedWork: number | null;
   readonly working: boolean;
-  readonly inProgress: { readonly estimatedWorkTime: DecimalHours; readonly status: "working" | "onBreak" } | null;
+  readonly inProgress: {
+    readonly estimatedWorkTime: DecimalHours;
+    readonly status: "working" | "onBreak";
+  } | null;
 }
 
 export interface AccumulateResult {
@@ -214,6 +217,9 @@ export function buildDashboardSummary(data: DashboardData): DashboardSummary {
 function toTimeStr(h: number): string {
   const hrs = Math.floor(h);
   const mins = Math.round((h - hrs) * 60);
+  if (mins === 60) {
+    return `${hrs + 1}:00`;
+  }
   return `${hrs}:${mins.toString().padStart(2, "0")}`;
 }
 

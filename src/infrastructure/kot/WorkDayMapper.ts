@@ -1,4 +1,4 @@
-import { parseWorkTime, asDecimalHours } from "../../domain/value-objects/TimeRecord";
+import { parseWorkTime } from "../../domain/value-objects/TimeRecord";
 import { parseAllTimeRecords, extractTimeStrings } from "../../domain/services/WorkTimeParser";
 import { calcNightWork } from "../../domain/services/NightWorkCalculator";
 import type { WorkDay } from "../../domain/entities/WorkDay";
@@ -9,6 +9,9 @@ import type { DashboardRow } from "../../types";
 function decimalHoursToTimeString(hours: number): string {
   const h = Math.floor(hours);
   const m = Math.round((hours - h) * 60);
+  if (m === 60) {
+    return `${h + 1}:00`;
+  }
   return `${h}:${m.toString().padStart(2, "0")}`;
 }
 

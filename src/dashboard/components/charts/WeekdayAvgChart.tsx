@@ -1,4 +1,4 @@
-import type { DailyRowSummary, WorkedDailyRow } from "../../../domain/aggregates/WorkMonth";
+import type { DailyRowSummary } from "../../../domain/aggregates/WorkMonth";
 import { DEFAULT_EXPECTED_HOURS } from "../../../domain/constants";
 import { formatHM } from "../../../domain/value-objects/WorkDuration";
 import { generateTicks, linearScale } from "../../lib/svg";

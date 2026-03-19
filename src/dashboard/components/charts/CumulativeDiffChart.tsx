@@ -25,7 +25,10 @@ export function CumulativeDiffChart({ rows }: CumulativeDiffChartProps) {
   const ticks = generateTicks(minVal, maxVal, 6);
 
   const xScale = linearScale([0, points.length - 1], [PAD.left, W - PAD.right]);
-  const yScale = linearScale([ticks[0] ?? 0, ticks[ticks.length - 1] ?? 0], [H - PAD.bottom, PAD.top]);
+  const yScale = linearScale(
+    [ticks[0] ?? 0, ticks[ticks.length - 1] ?? 0],
+    [H - PAD.bottom, PAD.top],
+  );
 
   const polylinePoints = points.map((p) => `${xScale(p.index)},${yScale(p.value)}`).join(" ");
   const zeroY = yScale(0);

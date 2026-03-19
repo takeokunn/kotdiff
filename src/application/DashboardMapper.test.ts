@@ -39,7 +39,12 @@ describe("toStorageData", () => {
   });
 
   test("converts WorkDay to DashboardRow (decimal hours become time strings)", () => {
-    const day = makeWorkDay({ startTime: dh(9), endTime: dh(18), breakStarts: [dh(12)], breakEnds: [dh(13)] });
+    const day = makeWorkDay({
+      startTime: dh(9),
+      endTime: dh(18),
+      breakStarts: [dh(12)],
+      breakEnds: [dh(13)],
+    });
     const result = toStorageData([day], [], "2026-03-01T00:00:00Z");
     expect(result.rows).toHaveLength(1);
     const row = defined(result.rows[0]);

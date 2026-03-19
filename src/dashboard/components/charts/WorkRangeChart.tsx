@@ -1,4 +1,4 @@
-import type { DailyRowSummary, WorkedDailyRow } from "../../../domain/aggregates/WorkMonth";
+import type { DailyRowSummary } from "../../../domain/aggregates/WorkMonth";
 import { parseTimeRecord } from "../../../domain/value-objects/TimeRecord";
 import { linearScale } from "../../lib/svg";
 

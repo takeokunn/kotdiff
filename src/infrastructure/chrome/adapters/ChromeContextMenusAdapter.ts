@@ -10,7 +10,14 @@ export const chromeContextMenusAdapter = {
       id: props.id,
       title: props.title,
       ...(props.type !== undefined ? { type: props.type } : {}),
-      ...(props.contexts !== undefined ? { contexts: [...props.contexts] as [chrome.contextMenus.ContextType, ...chrome.contextMenus.ContextType[]] } : {}),
+      ...(props.contexts !== undefined
+        ? {
+            contexts: [...props.contexts] as [
+              chrome.contextMenus.ContextType,
+              ...chrome.contextMenus.ContextType[],
+            ],
+          }
+        : {}),
       ...(props.checked !== undefined ? { checked: props.checked } : {}),
     });
   },

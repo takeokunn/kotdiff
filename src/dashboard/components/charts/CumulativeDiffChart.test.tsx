@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { CumulativeDiffChart } from "./CumulativeDiffChart";
-import { makeWorkedRow, makeUnworkedRow, makeRow } from "../../test-helpers";
+import { makeUnworkedRow, makeRow } from "../../test-helpers";
 
 describe("CumulativeDiffChart", () => {
   test("shows no-data message when all rows have null cumulativeDiff", () => {
